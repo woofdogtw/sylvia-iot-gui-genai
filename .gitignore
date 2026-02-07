@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.quasar/
+
+# IDE
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.local
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+
+# Sylvia-IoT services (runtime artifacts)
+skills/sylvia-iot-services/scripts/sylvia-iot-core
+skills/sylvia-iot-services/scripts/sylvia-iot-core.pid
+skills/sylvia-iot-services/scripts/sylvia-iot-core.log
+skills/sylvia-iot-services/scripts/test.db
+skills/sylvia-iot-services/scripts/*.backup.*
+skills/sylvia-iot-services/scripts/*.tar.xz

@@ -1,0 +1,17 @@
+{
+  "name": "@sylvia-iot/shared",
+  "version": "0.1.0",
+  "description": "Shared utilities, API clients, and components for Sylvia-IoT GUI",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./api/*": "./src/api/*",
+    "./composables/*": "./src/composables/*",
+    "./components/*": "./src/components/*",
+    "./utils/*": "./src/utils/*",
+    "./plugin-interface": "./src/plugin-interface.js",
+    "./i18n": "./src/i18n/index.js"
+  }
+}
