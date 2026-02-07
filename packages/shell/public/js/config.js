@@ -14,4 +14,7 @@ window.config = {
   data: {
     baseUrl: 'http://localhost:1080/data',
   },
+  // External plugins: URLs to ES module JS files with a default plugin export.
+  // Example: plugins: ['/js/plugins/my-plugin.js', 'https://cdn.example.com/plugin.js']
+  // plugins: [],
 }
