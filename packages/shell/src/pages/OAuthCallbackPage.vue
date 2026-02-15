@@ -39,6 +39,8 @@ onMounted(async () => {
 
   try {
     await authStore.handleCallback(code, state)
+    // Remove OAuth2 query parameters (?code=...&state=...) that sit before the hash
+    window.history.replaceState(null, '', window.location.pathname + window.location.hash)
     router.replace({ name: 'home' })
   } catch (err) {
     error.value = err.message || 'Authentication failed'

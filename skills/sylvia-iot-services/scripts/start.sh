@@ -9,6 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BINARY_NAME="sylvia-iot-core"
 BINARY_URL="https://github.com/woofdogtw/sylvia-iot-core/releases/latest/download/sylvia-iot-core-x86_64.tar.xz"
 CONFIG_FILE="$SCRIPT_DIR/config.json5"
+RUNTIME_CONFIG="$SCRIPT_DIR/config.runtime.json5"
 DB_FILE="$SCRIPT_DIR/test.db"
 SQL_FILE="$SCRIPT_DIR/test.db.sql"
 PID_FILE="$SCRIPT_DIR/sylvia-iot-core.pid"
@@ -47,32 +48,69 @@ else
     echo "✅ RabbitMQ created and started"
 fi
 
-# Start EMQX
+# Start EMQX (always fresh with --rm to ensure clean state)
 echo ""
 echo "Starting EMQX..."
-if docker ps -a --format '{{.Names}}' | grep -q '^sylvia-emqx$'; then
-    if docker ps --format '{{.Names}}' | grep -q '^sylvia-emqx$'; then
-        echo "✅ EMQX is already running"
-    else
-        echo "🔄 Starting existing EMQX container..."
-        docker start sylvia-emqx
-        echo "✅ EMQX started"
-    fi
-else
-    echo "🔄 Creating and starting EMQX container..."
-    docker run -d \
-        --name sylvia-emqx \
-        -p 1883:1883 \
-        -p 8883:8883 \
-        -p 18083:18083 \
-        emqx/emqx:6.0.1
-    echo "✅ EMQX created and started"
+if docker ps --format '{{.Names}}' | grep -q '^sylvia-emqx$'; then
+    echo "🔄 Removing existing EMQX container for clean start..."
+    docker stop sylvia-emqx >/dev/null 2>&1 || true
+    # --rm will auto-remove, but wait a moment for cleanup
+    sleep 2
 fi
+# Remove stopped container if it exists (in case it wasn't started with --rm)
+docker rm sylvia-emqx >/dev/null 2>&1 || true
 
-# Wait for services to be ready
+echo "🔄 Creating EMQX container..."
+docker run -d --rm \
+    --name sylvia-emqx \
+    -p 1883:1883 \
+    -p 8883:8883 \
+    -p 18083:18083 \
+    -v "$SCRIPT_DIR/emqx.conf":"/opt/emqx/etc/emqx.conf" \
+    emqx/emqx:6.1.0
+echo "✅ EMQX created and started"
+
+# Wait for EMQX dashboard to be ready
 echo ""
-echo "⏳ Waiting for message brokers to be ready (5 seconds)..."
-sleep 5
+echo "⏳ Waiting for EMQX to be ready..."
+for i in {1..30}; do
+    if curl -sf http://localhost:18083/api/v5/status > /dev/null 2>&1; then
+        echo "✅ EMQX is ready!"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        echo "❌ Error: EMQX did not become ready in time"
+        echo "   Check logs: docker logs sylvia-emqx"
+        exit 1
+    fi
+    sleep 1
+done
+
+# Setup EMQX API key for coremgr via emqx eval
+# (EMQX 6.x HTTP API has a bug in POST /api/v5/api_key — badmatch on role field)
+echo ""
+echo "Setting up EMQX API key..."
+docker exec sylvia-emqx emqx eval 'emqx_mgmt_auth:delete(<<"coremgr">>).' > /dev/null 2>&1 || true
+EMQX_EVAL_RESULT=$(docker exec sylvia-emqx emqx eval \
+    'emqx_mgmt_auth:create(<<"coremgr">>, true, infinity, #{}, <<"administrator">>).' 2>&1)
+
+EMQX_API_KEY=$(echo "$EMQX_EVAL_RESULT" | grep -oP 'api_key => <<"\K[^"]+')
+EMQX_API_SECRET=$(echo "$EMQX_EVAL_RESULT" | grep -oP 'api_secret => <<"\K[^"]+')
+
+if [ -z "$EMQX_API_KEY" ] || [ -z "$EMQX_API_SECRET" ]; then
+    echo "❌ Error: Could not create EMQX API key"
+    echo "   Result: $EMQX_EVAL_RESULT"
+    exit 1
+fi
+echo "✅ EMQX API key created"
+
+# Generate runtime config with EMQX credentials injected
+echo ""
+echo "Generating runtime config..."
+sed -e "s/\"apiKey\": \"\"/\"apiKey\": \"$EMQX_API_KEY\"/" \
+    -e "s/\"apiSecret\": \"\"/\"apiSecret\": \"$EMQX_API_SECRET\"/" \
+    "$CONFIG_FILE" > "$RUNTIME_CONFIG"
+echo "✅ Runtime config generated at $RUNTIME_CONFIG"
 
 # Download sylvia-iot-core binary if not present
 echo ""
@@ -115,18 +153,22 @@ else
     echo "✅ Database created"
 fi
 
-# Start sylvia-iot-core
-echo ""
+# Stop existing sylvia-iot-core if running
 if [ -f "$PID_FILE" ] && kill -0 $(cat "$PID_FILE") 2>/dev/null; then
-    echo "✅ sylvia-iot-core is already running (PID: $(cat "$PID_FILE"))"
-else
-    echo "🔄 Starting sylvia-iot-core..."
-    cd "$SCRIPT_DIR"
-    nohup ./"$BINARY_NAME" -f "$CONFIG_FILE" > sylvia-iot-core.log 2>&1 &
-    echo $! > "$PID_FILE"
-    echo "✅ sylvia-iot-core started (PID: $(cat "$PID_FILE"))"
-    echo "   Log file: $SCRIPT_DIR/sylvia-iot-core.log"
+    echo ""
+    echo "🔄 Stopping existing sylvia-iot-core (PID: $(cat "$PID_FILE"))..."
+    kill $(cat "$PID_FILE") 2>/dev/null || true
+    sleep 1
 fi
+
+# Start sylvia-iot-core with runtime config
+echo ""
+echo "🔄 Starting sylvia-iot-core..."
+cd "$SCRIPT_DIR"
+nohup ./"$BINARY_NAME" -f "$RUNTIME_CONFIG" > sylvia-iot-core.log 2>&1 &
+echo $! > "$PID_FILE"
+echo "✅ sylvia-iot-core started (PID: $(cat "$PID_FILE"))"
+echo "   Log file: $SCRIPT_DIR/sylvia-iot-core.log"
 
 # Wait for sylvia-iot-core to be ready
 echo ""
@@ -150,7 +192,7 @@ echo "======================================"
 echo ""
 echo "Services:"
 echo "  - RabbitMQ:            http://localhost:15672 (guest/guest)"
-echo "  - EMQX Dashboard:      http://localhost:18083"
+echo "  - EMQX Dashboard:      http://localhost:18083 (admin/public)"
 echo "  - Sylvia-IoT Core:     http://localhost:1080"
 echo "    - Auth:              http://localhost:1080/auth"
 echo "    - Broker:            http://localhost:1080/broker"

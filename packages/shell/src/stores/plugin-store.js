@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { useAuthStore } from './auth-store.js'
 
 /**
  * Menu categories for the hamburger menu.
@@ -9,9 +10,20 @@ const CATEGORIES = ['core', 'data', 'router', 'applications', 'networks']
 
 export const usePluginStore = defineStore('plugin', () => {
   const plugins = ref([])
+  const authStore = useAuthStore()
 
   /**
-   * Get all menu items grouped by category.
+   * Check if the current user has at least one of the required roles.
+   * If no roles are specified, the item is visible to everyone.
+   */
+  function hasRole(item) {
+    if (!item.roles || item.roles.length === 0) return true
+    const userRoles = authStore.user?.roles || {}
+    return item.roles.some((role) => userRoles[role])
+  }
+
+  /**
+   * Get all menu items grouped by category, filtered by user roles.
    */
   const menuByCategory = computed(() => {
     const grouped = {}
@@ -21,7 +33,11 @@ export const usePluginStore = defineStore('plugin', () => {
     for (const plugin of plugins.value) {
       const cat = plugin.category
       if (grouped[cat]) {
-        grouped[cat].push(...(plugin.menuItems || []))
+        for (const item of plugin.menuItems || []) {
+          if (hasRole(item)) {
+            grouped[cat].push(item)
+          }
+        }
       }
     }
     // Sort items by order within each category

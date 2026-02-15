@@ -32,8 +32,10 @@ coverage/
 
 # Sylvia-IoT services (runtime artifacts)
 skills/sylvia-iot-services/scripts/sylvia-iot-core
+*.pid
 skills/sylvia-iot-services/scripts/sylvia-iot-core.pid
 skills/sylvia-iot-services/scripts/sylvia-iot-core.log
 skills/sylvia-iot-services/scripts/test.db
 skills/sylvia-iot-services/scripts/*.backup.*
 skills/sylvia-iot-services/scripts/*.tar.xz
+skills/sylvia-iot-services/scripts/config.runtime.json5

@@ -70,7 +70,7 @@
               <q-item-section avatar v-if="item.icon">
                 <q-icon :name="item.icon" />
               </q-item-section>
-              <q-item-section>{{ item.label }}</q-item-section>
+              <q-item-section>{{ t(item.label) }}</q-item-section>
             </q-item>
           </q-expansion-item>
           <q-expansion-item

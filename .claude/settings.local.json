@@ -3,7 +3,14 @@
     "allow": [
       "Bash(openspec list:*)",
       "Bash(npm run lint:*)",
-      "Bash(openspec validate:*)"
+      "Bash(openspec validate:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(npx playwright test:*)",
+      "Bash(npm test:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(curl:*)",
+      "Bash(npx openspec:*)",
+      "Bash(npx eslint:*)"
     ]
   }
 }

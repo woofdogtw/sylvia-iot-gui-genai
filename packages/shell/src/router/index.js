@@ -20,6 +20,14 @@ export default route(function ({ store }) {
       if (!authStore.isAuthenticated) {
         return { name: 'welcome' }
       }
+      // Check role-based access
+      if (to.meta.roles?.length) {
+        const userRoles = authStore.user?.roles || {}
+        const hasRole = to.meta.roles.some((role) => userRoles[role])
+        if (!hasRole) {
+          return { name: 'home' }
+        }
+      }
     }
   })
 

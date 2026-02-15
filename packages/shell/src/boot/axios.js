@@ -1,8 +1,6 @@
 import { boot } from 'quasar/wrappers'
-import axios from 'axios'
+import { api } from '@sylvia-iot/shared'
 import { useAuthStore } from 'stores/auth-store.js'
-
-const api = axios.create()
 
 /**
  * Check if a URL is an OAuth2 or auth API endpoint.

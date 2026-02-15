@@ -147,10 +147,29 @@ export const useAuthStore = defineStore('auth', () => {
 
   /**
    * Initialize auth state from localStorage on app start.
+   * If the access token is expired, try refreshing before fetching user info.
    */
   async function init() {
-    if (accessToken.value) {
-      await fetchTokenInfo()
+    if (!accessToken.value) {
+      return
+    }
+
+    // If access token is expired, try refresh first
+    if (Date.now() >= tokenExpiresAt.value) {
+      const refreshed = await refreshAccessToken()
+      if (!refreshed) {
+        return
+      }
+    }
+
+    await fetchTokenInfo()
+
+    // If tokeninfo failed (e.g. server revoked the token), try refresh once
+    if (!user.value && refreshToken.value) {
+      const refreshed = await refreshAccessToken()
+      if (refreshed) {
+        await fetchTokenInfo()
+      }
     }
   }
 

@@ -4,29 +4,43 @@
     "auth": {
         "db": {
             "sqlite": {
-                "path": "test.db",                  // default: auth.db
-            },
-        },
+                "path": "test.db"
+            }
+        }
     },
     "broker": {
         "auth": "http://localhost:1080/auth",
         "db": {
             "sqlite": {
-                "path": "test.db",                  // default: broker.db
-            },
-        },
+                "path": "test.db"
+            }
+        }
     },
     "coremgr": {
         "auth": "http://localhost:1080/auth",
         "broker": "http://localhost:1080/broker",
+        "mq": {
+            "engine": {
+                "amqp": "rabbitmq",
+                "mqtt": "emqx"
+            },
+            "rabbitmq": {
+                "username": "guest",
+                "password": "guest"
+            },
+            "emqx": {
+                "apiKey": "",
+                "apiSecret": ""
+            }
+        }
     },
     "data": {
         "auth": "http://localhost:1080/auth",
         "broker": "http://localhost:1080/broker",
         "db": {
             "sqlite": {
-                "path": "test.db",                  // default: data.db
-            },
-        },
-    },
+                "path": "test.db"
+            }
+        }
+    }
 }
