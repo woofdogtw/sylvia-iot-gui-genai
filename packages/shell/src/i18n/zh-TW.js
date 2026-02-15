@@ -15,6 +15,12 @@ export default {
     login: '登入',
     logout: '登出',
     loginPrompt: '請登入以繼續',
+    profile: '個人資料',
+    profileSaved: '個人資料已更新',
+    profileName: '名稱',
+    profilePassword: '密碼',
+    profileInfo: '資訊（JSON）',
+    profileInfoInvalid: '必須是有效的 JSON 物件',
   },
   welcome: {
     title: '歡迎使用 Sylvia-IoT',

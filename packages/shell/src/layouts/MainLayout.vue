@@ -23,6 +23,12 @@
           <q-btn flat no-caps :label="userName" icon="person">
             <q-menu>
               <q-list style="min-width: 150px">
+                <q-item clickable v-close-popup @click="openProfileDialog">
+                  <q-item-section avatar>
+                    <q-icon name="account_circle" />
+                  </q-item-section>
+                  <q-item-section>{{ t('auth.profile') }}</q-item-section>
+                </q-item>
                 <q-item clickable v-close-popup @click="handleLogout">
                   <q-item-section avatar>
                     <q-icon name="logout" />
@@ -96,6 +102,42 @@
     <q-page-container>
       <router-view />
     </q-page-container>
+
+    <!-- Profile dialog -->
+    <q-dialog v-model="showProfile" @keydown.enter.prevent="saveProfile">
+      <q-card style="min-width: 400px">
+        <q-card-section>
+          <div class="text-h6">{{ t('auth.profile') }}</div>
+        </q-card-section>
+        <q-card-section>
+          <div class="q-mb-md">
+            <span class="text-weight-medium">{{ authStore.user?.account }}</span>
+          </div>
+          <q-input
+            v-model="profileForm.name"
+            :label="t('auth.profileName')"
+            class="q-mb-sm"
+          />
+          <q-input
+            v-model="profileForm.password"
+            :label="t('auth.profilePassword')"
+            type="password"
+            class="q-mb-sm"
+          />
+          <q-input
+            v-model="profileForm.info"
+            :label="t('auth.profileInfo')"
+            type="textarea"
+            autogrow
+            :rules="[ruleJsonObject]"
+          />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn flat color="primary" label="OK" @click="saveProfile" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-layout>
 </template>
 
@@ -106,6 +148,7 @@ import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useAuthStore } from 'stores/auth-store.js'
 import { usePluginStore } from 'stores/plugin-store.js'
+import { api, coremgrUrl } from '@sylvia-iot/shared'
 
 const { t } = useI18n()
 const $q = useQuasar()
@@ -152,5 +195,51 @@ function onMenuItemClick() {
 async function handleLogout() {
   await authStore.logout()
   router.push({ name: 'welcome' })
+}
+
+// Profile dialog
+const showProfile = ref(false)
+const profileForm = ref({ name: '', password: '', info: '' })
+
+function openProfileDialog() {
+  const user = authStore.user || {}
+  profileForm.value = {
+    name: user.name || '',
+    password: '',
+    info: user.info ? JSON.stringify(user.info, null, 2) : '',
+  }
+  showProfile.value = true
+}
+
+function ruleJsonObject(val) {
+  if (!val || !val.trim()) return true
+  try {
+    const parsed = JSON.parse(val)
+    if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+      return t('auth.profileInfoInvalid')
+    }
+    return true
+  } catch {
+    return t('auth.profileInfoInvalid')
+  }
+}
+
+async function saveProfile() {
+  const form = profileForm.value
+  // Validate info field
+  if (form.info && form.info.trim() && ruleJsonObject(form.info) !== true) return
+
+  const body = { name: form.name }
+  if (form.password) body.password = form.password
+  body.info = form.info && form.info.trim() ? JSON.parse(form.info) : {}
+
+  try {
+    await api.patch(coremgrUrl(`/api/v1/user/${authStore.user.userId}`), { data: body })
+    await authStore.fetchTokenInfo()
+    showProfile.value = false
+    $q.notify({ type: 'positive', message: t('auth.profileSaved') })
+  } catch {
+    $q.notify({ type: 'negative', message: 'Failed to update profile' })
+  }
 }
 </script>

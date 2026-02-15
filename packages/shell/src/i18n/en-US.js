@@ -15,6 +15,12 @@ export default {
     login: 'Login',
     logout: 'Logout',
     loginPrompt: 'Please log in to continue',
+    profile: 'Profile',
+    profileSaved: 'Profile updated',
+    profileName: 'Name',
+    profilePassword: 'Password',
+    profileInfo: 'Info (JSON)',
+    profileInfoInvalid: 'Must be a valid JSON object',
   },
   welcome: {
     title: 'Welcome to Sylvia-IoT',

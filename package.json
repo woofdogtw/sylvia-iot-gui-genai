@@ -10,7 +10,8 @@
     "dev": "npm run dev -w packages/shell",
     "build": "npm run build -w packages/shell",
     "lint": "npm run lint -w packages/shell",
-    "test": "npm run test -w packages/shell"
+    "test": "npm run test -w packages/shell",
+    "test:e2e": "npm run test:e2e -w packages/shell"
   },
   "engines": {
     "node": ">= 18.0.0"
