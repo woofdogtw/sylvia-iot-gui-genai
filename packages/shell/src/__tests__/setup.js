@@ -13,4 +13,7 @@ window.config = {
   data: {
     baseUrl: 'http://localhost:1080/data',
   },
+  router: {
+    baseUrl: 'http://localhost:1080/router',
+  },
 }

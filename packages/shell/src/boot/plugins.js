@@ -2,6 +2,7 @@ import { boot } from 'quasar/wrappers'
 import { usePluginStore } from 'stores/plugin-store.js'
 import mfeCore from '@sylvia-iot/mfe-core'
 import mfeData from '@sylvia-iot/mfe-data'
+import mfeRouter from '@sylvia-iot/mfe-router'
 import mfeExample from '@sylvia-iot/mfe-example'
 
 /**
@@ -11,6 +12,7 @@ import mfeExample from '@sylvia-iot/mfe-example'
 const builtinPlugins = [
   mfeCore,
   mfeData,
+  mfeRouter,
   mfeExample,
 ]
 

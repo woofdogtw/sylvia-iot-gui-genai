@@ -5,6 +5,9 @@ node_modules/
 dist/
 .quasar/
 
+# Claude Code (local permissions)
+.claude/settings.local.json
+
 # IDE
 .idea/
 *.suo
@@ -27,8 +30,9 @@ npm-debug.log*
 .env.local
 .env.*.local
 
-# Test coverage
+# Test coverage & results
 coverage/
+test-results/
 
 # Sylvia-IoT services (runtime artifacts)
 skills/sylvia-iot-services/scripts/sylvia-iot-core

@@ -1,0 +1,15 @@
+{
+  "name": "@sylvia-iot/mfe-router",
+  "version": "0.0.1",
+  "description": "Router management plugin for Sylvia-IoT GUI",
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./i18n": "./src/i18n/index.js",
+    "./src/*": "./src/*"
+  },
+  "dependencies": {
+    "@sylvia-iot/shared": "*"
+  }
+}
