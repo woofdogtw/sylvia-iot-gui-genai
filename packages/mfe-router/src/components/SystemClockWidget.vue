@@ -28,8 +28,10 @@ function formatFromMs(ms) {
 async function fetchAndSchedule() {
   try {
     const res = await sysApi.getTime()
-    const ms = res.data?.data?.time
-    if (typeof ms !== 'number') {
+    const raw = res.data?.data?.time
+    // API returns ISO string (e.g. "2026-02-19T15:34:28.062Z"); convert to ms
+    const ms = typeof raw === 'number' ? raw : raw ? new Date(raw).getTime() : NaN
+    if (!ms || isNaN(ms)) {
       visible.value = false
       return
     }

@@ -2,9 +2,21 @@ import { api, routerUrl } from '@sylvia-iot/shared'
 
 const BASE = '/api/v1'
 
+// Derive the host origin from the router baseUrl for the public /version endpoint.
+// E.g. baseUrl "http://localhost:1080/router" → origin "http://localhost:1080"
+function routerOrigin() {
+  const baseUrl = window.config?.router?.baseUrl || ''
+  try {
+    return new URL(baseUrl).origin
+  } catch {
+    return ''
+  }
+}
+
 export const versionApi = {
+  // GET /version is a public root-level endpoint (no /router prefix, no auth required)
   get() {
-    return api.get(routerUrl('/version'))
+    return api.get(`${routerOrigin()}/version`)
   },
 }
 

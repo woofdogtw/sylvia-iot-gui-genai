@@ -87,6 +87,10 @@ The router plugin SHALL register a header widget that displays the router's syst
 - **WHEN** the sys/time API call fails
 - **THEN** the clock widget is hidden (no error shown)
 
+#### Scenario: Clock widget visible after login
+- **WHEN** the user logs in and the `sylvia-router` backend is running
+- **THEN** a `div.text-center` containing text matching `YYYY/MM/DD` is visible inside `.q-toolbar`
+
 ### Requirement: Service Info Header Widget
 The router plugin SHALL register a header widget that displays the router service name and version in two lines, fetched once from `GET /version` on mount. If the API is unreachable, the widget SHALL hide gracefully.
 
@@ -97,6 +101,10 @@ The router plugin SHALL register a header widget that displays the router servic
 #### Scenario: Version API unreachable
 - **WHEN** GET /version fails
 - **THEN** the service info widget is hidden (no error shown)
+
+#### Scenario: Service info widget visible after login
+- **WHEN** the user logs in and the `sylvia-router` backend is running
+- **THEN** a `div.text-center` containing a version string is visible inside `.q-toolbar`
 
 ### Requirement: i18n Support
 The router plugin SHALL provide i18n messages for en-US and zh-TW covering all menu labels, page titles, field labels, status messages, and validation messages.

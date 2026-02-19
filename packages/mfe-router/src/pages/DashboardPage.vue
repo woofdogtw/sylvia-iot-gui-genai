@@ -71,7 +71,7 @@ import { sysApi } from '../api/index.js'
 
 const { t } = useI18n()
 
-const cpuMode = ref('perCore')
+const cpuMode = ref('overall')
 const cpuCores = ref([])
 const memoryUsed = ref(0)
 const memoryTotal = ref(1)

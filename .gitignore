@@ -36,6 +36,7 @@ test-results/
 
 # Sylvia-IoT services (runtime artifacts)
 skills/sylvia-iot-services/scripts/sylvia-iot-core
+skills/sylvia-iot-services/scripts/sylvia-router
 *.pid
 skills/sylvia-iot-services/scripts/sylvia-iot-core.pid
 skills/sylvia-iot-services/scripts/sylvia-iot-core.log
@@ -43,3 +44,11 @@ skills/sylvia-iot-services/scripts/test.db
 skills/sylvia-iot-services/scripts/*.backup.*
 skills/sylvia-iot-services/scripts/*.tar.xz
 skills/sylvia-iot-services/scripts/config.runtime.json5
+
+# Sylvia-Router services (runtime artifacts)
+skills/sylvia-router/scripts/sylvia-router
+skills/sylvia-router/scripts/sylvia-router.log
+skills/sylvia-router/scripts/test.db
+skills/sylvia-router/scripts/*.backup.*
+skills/sylvia-router/scripts/*.tar.xz
+skills/sylvia-router/scripts/config.runtime.json5
