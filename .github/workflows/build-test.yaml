@@ -51,7 +51,7 @@ jobs:
           target-folder: docs/coverage
 
   e2e-core:
-    name: E2E Tests (Core/Data)
+    name: E2E Tests (Core)
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -87,8 +87,8 @@ jobs:
       - name: Wait for web server
         run: timeout 30 bash -c 'until curl -sf http://localhost:9000; do sleep 1; done'
 
-      - name: Run E2E tests (core/data — excludes Router Plugin Pages)
-        run: npx playwright test --grep-invert "Router Plugin Pages"
+      - name: Run E2E tests (core)
+        run: npx playwright test e2e/login.spec.js e2e/navigation.spec.js e2e/about.spec.js e2e/profile.spec.js e2e/unit.spec.js e2e/user.spec.js e2e/client.spec.js e2e/application.spec.js e2e/device.spec.js e2e/device-route.spec.js e2e/network.spec.js e2e/network-route.spec.js e2e/dldata-buffer.spec.js
         working-directory: packages/shell
 
       - name: Upload test results on failure
@@ -96,6 +96,54 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: e2e-core-results
+          path: packages/shell/test-results/
+
+  e2e-data:
+    name: E2E Tests (Data)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install system dependencies
+        run: sudo apt-get install -y sqlite3
+
+      - name: Remove bundled binary (CI downloads latest from GitHub Releases)
+        run: rm -f skills/sylvia-iot-services/scripts/sylvia-iot-core
+
+      - name: Remove local database (CI creates fresh)
+        run: rm -f skills/sylvia-iot-services/scripts/test.db
+
+      - name: Start backend services (RabbitMQ + EMQX + sylvia-iot-core)
+        run: bash skills/sylvia-iot-services/scripts/start.sh
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox
+        working-directory: packages/shell
+
+      - name: Build SPA
+        run: npm run build
+
+      - name: Serve SPA on port 9000
+        run: npx -y serve packages/shell/dist/spa -l 9000 &
+
+      - name: Wait for web server
+        run: timeout 30 bash -c 'until curl -sf http://localhost:9000; do sleep 1; done'
+
+      - name: Run E2E tests (data)
+        run: npx playwright test e2e/data.spec.js
+        working-directory: packages/shell
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-data-results
           path: packages/shell/test-results/
 
   e2e-router:
