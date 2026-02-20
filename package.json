@@ -11,7 +11,9 @@
     "build": "npm run build -w packages/shell",
     "lint": "npm run lint -w packages/shell",
     "test": "npm run test -w packages/shell",
-    "test:e2e": "npm run test:e2e -w packages/shell"
+    "test:coverage": "npm run test:coverage -w packages/shell",
+    "test:e2e": "npm run test:e2e -w packages/shell",
+    "badge": "npm run badge -w packages/shell"
   },
   "engines": {
     "node": ">= 18.0.0"

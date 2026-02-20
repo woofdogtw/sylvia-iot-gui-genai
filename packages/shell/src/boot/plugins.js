@@ -8,11 +8,13 @@ import mfeExample from '@sylvia-iot/mfe-example'
 /**
  * Builtin plugins (statically imported).
  * To add a new builtin plugin, import it and add to this array.
+ * Set VITE_INCLUDE_ROUTER=false at build time to exclude the router plugin
+ * (e.g., for Docker/cloud deployments where network interface control is unavailable).
  */
 const builtinPlugins = [
   mfeCore,
   mfeData,
-  mfeRouter,
+  ...(import.meta.env.VITE_INCLUDE_ROUTER !== 'false' ? [mfeRouter] : []),
   mfeExample,
 ]
 

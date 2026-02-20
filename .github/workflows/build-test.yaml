@@ -1,0 +1,147 @@
+name: Build and Test
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+env:
+  LCOV_BADGE_VER: v0.2.0
+
+jobs:
+  lint-unit:
+    name: Lint and Unit Tests
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test:coverage
+
+      - name: Install lcov and badge generator
+        if: github.event_name != 'pull_request'
+        run: |
+          sudo apt-get install -y lcov
+          curl -kLO https://github.com/romainreignier/lcov_badge_generator/releases/download/$LCOV_BADGE_VER/lcov_badge_generator
+          chmod +x lcov_badge_generator
+          sudo install lcov_badge_generator /usr/local/bin
+
+      - name: Generate coverage badge
+        if: github.event_name != 'pull_request'
+        run: npm run badge -w packages/shell
+
+      - name: Collect coverage report
+        if: github.event_name != 'pull_request'
+        run: |
+          mkdir ./coverage
+          cp -r packages/shell/coverage ./coverage/shell
+
+      - name: Deploy coverage to GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: ./coverage
+          target-folder: docs/coverage
+
+  e2e-core:
+    name: E2E Tests (Core/Data)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install system dependencies
+        run: sudo apt-get install -y sqlite3
+
+      - name: Remove bundled binary (CI downloads latest from GitHub Releases)
+        run: rm -f skills/sylvia-iot-services/scripts/sylvia-iot-core
+
+      - name: Remove local database (CI creates fresh)
+        run: rm -f skills/sylvia-iot-services/scripts/test.db
+
+      - name: Start backend services (RabbitMQ + EMQX + sylvia-iot-core)
+        run: bash skills/sylvia-iot-services/scripts/start.sh
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox
+        working-directory: packages/shell
+
+      - name: Build SPA
+        run: npm run build
+
+      - name: Serve SPA on port 9000
+        run: npx -y serve packages/shell/dist/spa -l 9000 &
+
+      - name: Wait for web server
+        run: timeout 30 bash -c 'until curl -sf http://localhost:9000; do sleep 1; done'
+
+      - name: Run E2E tests (core/data — excludes Router Plugin Pages)
+        run: npx playwright test --grep-invert "Router Plugin Pages"
+        working-directory: packages/shell
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-core-results
+          path: packages/shell/test-results/
+
+  e2e-router:
+    name: E2E Tests (Router)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install system dependencies
+        run: sudo apt-get install -y sqlite3
+
+      - name: Remove bundled binary (CI downloads latest from GitHub Releases)
+        run: rm -f skills/sylvia-router/scripts/sylvia-router
+
+      - name: Remove local database (CI creates fresh)
+        run: rm -f skills/sylvia-router/scripts/test.db
+
+      - name: Start backend services (RabbitMQ + EMQX + sylvia-router)
+        run: bash skills/sylvia-router/scripts/start.sh
+
+      - run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium firefox
+        working-directory: packages/shell
+
+      - name: Build SPA
+        run: npm run build
+
+      - name: Serve SPA on port 9000
+        run: npx -y serve packages/shell/dist/spa -l 9000 &
+
+      - name: Wait for web server
+        run: timeout 30 bash -c 'until curl -sf http://localhost:9000; do sleep 1; done'
+
+      - name: Run E2E tests (router)
+        run: npx playwright test e2e/router.spec.js
+        working-directory: packages/shell
+
+      - name: Upload test results on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-router-results
+          path: packages/shell/test-results/

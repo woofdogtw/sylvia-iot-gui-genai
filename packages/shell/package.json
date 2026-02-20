@@ -10,8 +10,10 @@
     "build": "quasar build",
     "lint": "eslint --ext .js,.vue src",
     "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "badge": "genhtml ./coverage/lcov.info -o coverage/html && lcov_badge_generator -o coverage/badge.svg coverage/html/index.html"
   },
   "dependencies": {
     "@quasar/extras": "^1.16.0",
@@ -28,6 +30,7 @@
     "@playwright/test": "^1.58.1",
     "@quasar/app-vite": "^2.1.0",
     "@vitejs/plugin-vue": "^6.0.4",
+    "@vitest/coverage-v8": "^2.0.0",
     "@vue/test-utils": "^2.4.0",
     "eslint": "^9.0.0",
     "eslint-plugin-vue": "^9.0.0",

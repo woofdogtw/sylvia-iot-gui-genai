@@ -12,6 +12,12 @@ export default defineConfig({
     globals: true,
     setupFiles: ['src/__tests__/setup.js'],
     exclude: ['e2e/**', 'node_modules/**'],
+    coverage: {
+      provider: 'v8',
+      reporter: ['lcov', 'text'],
+      include: ['src/**'],
+      exclude: ['src/__tests__/**'],
+    },
   },
   resolve: {
     alias: {

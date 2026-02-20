@@ -1,0 +1,116 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  GHR_VER: v0.17.0
+  BIN_DIR: dist
+
+jobs:
+  release:
+    name: Publish GitHub Release and Docker Image
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Build SPA (full — includes all plugins)
+        run: npm run build
+
+      - name: Prepare release artifacts
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VER=${TAG#v}
+          mkdir -p $BIN_DIR/tmp/sylvia-iot-gui
+
+          # Copy SPA and add VERSION file
+          cp -r packages/shell/dist/spa/. $BIN_DIR/tmp/sylvia-iot-gui/
+          echo -n "$VER" > $BIN_DIR/tmp/sylvia-iot-gui/VERSION
+
+          # Create tar.xz archive
+          tar cf $BIN_DIR/sylvia-iot-gui-$TAG.tar -C $BIN_DIR/tmp sylvia-iot-gui
+          xz -z -9 -e $BIN_DIR/sylvia-iot-gui-$TAG.tar
+          rm -rf $BIN_DIR/tmp
+
+          # Standalone VERSION file
+          echo -n "$VER" > $BIN_DIR/VERSION
+
+          echo "TAG=$TAG" >> $GITHUB_ENV
+          echo "VER=$VER" >> $GITHUB_ENV
+
+      - name: Generate SBOM
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | \
+            sh -s -- -b /usr/local/bin
+          mkdir -p sbom
+          syft . -o spdx-json=sbom/sylvia-iot-gui-spdx.json
+          syft . -o cyclonedx-json=sbom/sylvia-iot-gui-cyclonedx.json
+          tar cf sbom.tar sbom
+          xz -z -9 -e sbom.tar
+          mv sbom.tar.xz $BIN_DIR/
+
+      - name: Create SHA256SUMS
+        run: |
+          cd $BIN_DIR
+          sha256sum * > SHA256SUMS
+
+      - name: Build SPA without router (for Docker — network interface control not available in containers)
+        env:
+          VITE_INCLUDE_ROUTER: 'false'
+        run: npm run build
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          tags: |
+            woofdogtw/sylvia-iot-gui:${{ env.VER }}
+            woofdogtw/sylvia-iot-gui:latest
+            ghcr.io/woofdogtw/sylvia-iot-gui:${{ env.VER }}
+            ghcr.io/woofdogtw/sylvia-iot-gui:latest
+
+      - name: Download ghr
+        run: |
+          curl -L https://github.com/tcnksm/ghr/releases/download/$GHR_VER/ghr_${GHR_VER}_linux_amd64.tar.gz | \
+            tar xz -C /tmp
+          sudo mv /tmp/ghr_${GHR_VER}_linux_amd64/ghr /usr/local/bin/ghr
+
+      - name: Create GitHub Release
+        run: |
+          ghr -t ${{ secrets.GITHUB_TOKEN }} \
+            -u ${{ github.repository_owner }} \
+            -r ${{ github.event.repository.name }} \
+            -n "$TAG" \
+            $TAG $BIN_DIR/

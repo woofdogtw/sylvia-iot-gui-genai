@@ -1,5 +1,10 @@
 # Sylvia-IoT GUI
 
+[![CI](https://github.com/woofdogtw/sylvia-iot-gui-genai/actions/workflows/build-test.yaml/badge.svg)](https://github.com/woofdogtw/sylvia-iot-gui-genai/actions/workflows/build-test.yaml)
+[![Docker](https://img.shields.io/docker/v/woofdogtw/sylvia-iot-gui?label=docker&logo=docker)](https://hub.docker.com/r/woofdogtw/sylvia-iot-gui)
+[![Coverage](https://woofdogtw.github.io/sylvia-iot-gui-genai/docs/coverage/shell/badge.svg)](https://woofdogtw.github.io/sylvia-iot-gui-genai/docs/coverage/shell/)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Micro-frontend applications for the [Sylvia-IoT](https://github.com/woofdogtw/sylvia-iot-core) IoT platform.
 
 ## Architecture
@@ -47,4 +52,4 @@ See [packages/shared/README.md](packages/shared/README.md) for the plugin interf
 
 ## License
 
-TBD
+This project is licensed under the [MIT License](LICENSE).
