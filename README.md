@@ -7,7 +7,7 @@
 
 Micro-frontend applications for the [Sylvia-IoT](https://github.com/woofdogtw/sylvia-iot-core) IoT platform.
 
-> **Note:** This project is also a practice ground for AI-assisted development using [Claude Code](https://claude.ai/claude-code) with a spec-driven workflow powered by [OpenSpec](https://github.com/OpenSpecDev/openspec).
+> **Note:** This project is also a practice ground for AI-assisted development using [Claude Code](https://claude.ai/claude-code) with a spec-driven workflow powered by [OpenSpec](https://github.com/Fission-AI/OpenSpec).
 
 ## Architecture
 
