@@ -1,0 +1,125 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <title>LCOV - lcov.info - pages/src/pages/OAuthCallbackPage.vue</title>
+  <link rel="stylesheet" type="text/css" href="../../../gcov.css">
+</head>
+
+<body>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="title">LCOV - code coverage report</td></tr>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+
+            <tr>
+              <td width="100%">
+                <table cellpadding=1 border=0 width="100%">
+          <tr>
+            <td width="10%" class="headerItem">Current view:</td>
+            <td width="10%" class="headerValue"><a href="../../../index.html">top level</a> - <a href="index.html">pages/src/pages</a> - OAuthCallbackPage.vue<span style="font-size: 80%;"> (source / <a href="OAuthCallbackPage.vue.func-c.html">functions</a>)</span></td>
+            <td width="5%"></td>
+            <td width="5%"></td>
+            <td width="5%" class="headerCovTableHead">Coverage</td>
+            <td width="5%" class="headerCovTableHead" title="Covered + Uncovered code">Total</td>
+            <td width="5%" class="headerCovTableHead" title="Exercised code only">Hit</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test:</td>
+            <td class="headerValue">lcov.info</td>
+            <td></td>
+            <td class="headerItem">Lines:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">19</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+          <tr>
+            <td class="headerItem">Test Date:</td>
+            <td class="headerValue">2026-02-20 15:14:30</td>
+            <td></td>
+            <td class="headerItem">Functions:</td>
+            <td class="headerCovTableEntryLo">0.0&nbsp;%</td>
+            <td class="headerCovTableEntry">2</td>
+            <td class="headerCovTableEntry">0</td>
+          </tr>
+                  <tr><td><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+          </table>
+
+          <table cellpadding=0 cellspacing=0 border=0>
+            <tr>
+              <td><br></td>
+            </tr>
+            <tr>
+              <td>
+<pre class="sourceHeading">            Line data    Source code</pre>
+<pre class="source">
+<span id="L1"><span class="lineNum">       1</span>              : &lt;template&gt;</span>
+<span id="L2"><span class="lineNum">       2</span> <span class="tlaUNC tlaBgUNC">           0 :   &lt;q-page class=&quot;flex flex-center&quot;&gt;</span></span>
+<span id="L3"><span class="lineNum">       3</span> <span class="tlaUNC">           0 :     &lt;div v-if=&quot;error&quot; class=&quot;text-center&quot;&gt;</span></span>
+<span id="L4"><span class="lineNum">       4</span>              :       &lt;q-icon name=&quot;error&quot; size=&quot;48px&quot; color=&quot;negative&quot; /&gt;</span>
+<span id="L5"><span class="lineNum">       5</span>              :       &lt;p class=&quot;q-mt-md text-negative&quot;&gt;{{ error }}&lt;/p&gt;</span>
+<span id="L6"><span class="lineNum">       6</span>              :       &lt;q-btn flat color=&quot;primary&quot; :label=&quot;t('error.goHome')&quot; :to=&quot;{ name: 'welcome' }&quot; /&gt;</span>
+<span id="L7"><span class="lineNum">       7</span>              :     &lt;/div&gt;</span>
+<span id="L8"><span class="lineNum">       8</span>              :     &lt;div v-else class=&quot;text-center&quot;&gt;</span>
+<span id="L9"><span class="lineNum">       9</span>              :       &lt;q-spinner size=&quot;48px&quot; color=&quot;primary&quot; /&gt;</span>
+<span id="L10"><span class="lineNum">      10</span>              :       &lt;p class=&quot;q-mt-md&quot;&gt;Authenticating...&lt;/p&gt;</span>
+<span id="L11"><span class="lineNum">      11</span>              :     &lt;/div&gt;</span>
+<span id="L12"><span class="lineNum">      12</span>              :   &lt;/q-page&gt;</span>
+<span id="L13"><span class="lineNum">      13</span>              : &lt;/template&gt;</span>
+<span id="L14"><span class="lineNum">      14</span>              : </span>
+<span id="L15"><span class="lineNum">      15</span>              : &lt;script setup&gt;</span>
+<span id="L16"><span class="lineNum">      16</span>              : import { ref, onMounted } from 'vue'</span>
+<span id="L17"><span class="lineNum">      17</span>              : import { useRouter, useRoute } from 'vue-router'</span>
+<span id="L18"><span class="lineNum">      18</span>              : import { useI18n } from 'vue-i18n'</span>
+<span id="L19"><span class="lineNum">      19</span>              : import { useAuthStore } from 'stores/auth-store.js'</span>
+<span id="L20"><span class="lineNum">      20</span>              : </span>
+<span id="L21"><span class="lineNum">      21</span> <span class="tlaUNC">           0 : const { t } = useI18n()</span></span>
+<span id="L22"><span class="lineNum">      22</span> <span class="tlaUNC">           0 : const router = useRouter()</span></span>
+<span id="L23"><span class="lineNum">      23</span> <span class="tlaUNC">           0 : const route = useRoute()</span></span>
+<span id="L24"><span class="lineNum">      24</span> <span class="tlaUNC">           0 : const authStore = useAuthStore()</span></span>
+<span id="L25"><span class="lineNum">      25</span>              : </span>
+<span id="L26"><span class="lineNum">      26</span> <span class="tlaUNC">           0 : const error = ref(null)</span></span>
+<span id="L27"><span class="lineNum">      27</span>              : </span>
+<span id="L28"><span class="lineNum">      28</span> <span class="tlaUNC">           0 : onMounted(async () =&gt; {</span></span>
+<span id="L29"><span class="lineNum">      29</span>              :   // In hash routing mode, the OAuth2 server appends ?code=...&amp;state=... before the #,</span>
+<span id="L30"><span class="lineNum">      30</span>              :   // so params are in window.location.search, not in route.query.</span>
+<span id="L31"><span class="lineNum">      31</span> <span class="tlaUNC">           0 :   const urlParams = new URLSearchParams(window.location.search)</span></span>
+<span id="L32"><span class="lineNum">      32</span> <span class="tlaUNC">           0 :   const code = route.query.code || urlParams.get('code')</span></span>
+<span id="L33"><span class="lineNum">      33</span> <span class="tlaUNC">           0 :   const state = route.query.state || urlParams.get('state')</span></span>
+<span id="L34"><span class="lineNum">      34</span>              : </span>
+<span id="L35"><span class="lineNum">      35</span> <span class="tlaUNC">           0 :   if (!code) {</span></span>
+<span id="L36"><span class="lineNum">      36</span> <span class="tlaUNC">           0 :     error.value = 'No authorization code received'</span></span>
+<span id="L37"><span class="lineNum">      37</span> <span class="tlaUNC">           0 :     return</span></span>
+<span id="L38"><span class="lineNum">      38</span>              :   }</span>
+<span id="L39"><span class="lineNum">      39</span>              : </span>
+<span id="L40"><span class="lineNum">      40</span> <span class="tlaUNC">           0 :   try {</span></span>
+<span id="L41"><span class="lineNum">      41</span> <span class="tlaUNC">           0 :     await authStore.handleCallback(code, state)</span></span>
+<span id="L42"><span class="lineNum">      42</span>              :     // Remove OAuth2 query parameters (?code=...&amp;state=...) that sit before the hash</span>
+<span id="L43"><span class="lineNum">      43</span> <span class="tlaUNC">           0 :     window.history.replaceState(null, '', window.location.pathname + window.location.hash)</span></span>
+<span id="L44"><span class="lineNum">      44</span> <span class="tlaUNC">           0 :     router.replace({ name: 'home' })</span></span>
+<span id="L45"><span class="lineNum">      45</span>              :   } catch (err) {</span>
+<span id="L46"><span class="lineNum">      46</span> <span class="tlaUNC">           0 :     error.value = err.message || 'Authentication failed'</span></span>
+<span id="L47"><span class="lineNum">      47</span>              :   }</span>
+<span id="L48"><span class="lineNum">      48</span>              : })</span>
+<span id="L49"><span class="lineNum">      49</span>              : &lt;/script&gt;</span>
+        </pre>
+              </td>
+            </tr>
+          </table>
+          <br>
+
+          <table width="100%" border=0 cellspacing=0 cellpadding=0>
+            <tr><td class="ruler"><img src="../../../glass.png" width=3 height=3 alt=""></td></tr>
+            <tr><td class="versionInfo">Generated by: <a href="https://github.com//linux-test-project/lcov" target="_parent">LCOV version 2.0-1</a></td></tr>
+          </table>
+          <br>
+
+</body>
+</html>
