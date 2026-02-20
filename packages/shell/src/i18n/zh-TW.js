@@ -4,6 +4,7 @@ export default {
   },
   menu: {
     home: '首頁',
+    about: '關於',
     core: '核心管理',
     data: '資料管理',
     router: '路由管理',
@@ -40,5 +41,12 @@ export default {
   error: {
     notFound: '找不到頁面',
     goHome: '回首頁',
+  },
+  about: {
+    title: '關於',
+    frontend: '前端',
+    service: '服務',
+    name: '名稱',
+    version: '版本',
   },
 }

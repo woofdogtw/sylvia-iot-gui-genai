@@ -4,6 +4,7 @@ export default {
   },
   menu: {
     home: 'Home',
+    about: 'About',
     core: 'Core',
     data: 'Data',
     router: 'Router',
@@ -40,5 +41,12 @@ export default {
   error: {
     notFound: 'Page not found',
     goHome: 'Go Home',
+  },
+  about: {
+    title: 'About',
+    frontend: 'Frontend',
+    service: 'Service',
+    name: 'Name',
+    version: 'Version',
   },
 }
