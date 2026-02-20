@@ -55,6 +55,14 @@
           <q-item-section>{{ t('menu.home') }}</q-item-section>
         </q-item>
 
+        <!-- About -->
+        <q-item clickable v-ripple :to="{ name: 'about' }">
+          <q-item-section avatar>
+            <q-icon name="info" />
+          </q-item-section>
+          <q-item-section>{{ t('menu.about') }}</q-item-section>
+        </q-item>
+
         <q-separator />
 
         <!-- Dynamic plugin categories -->

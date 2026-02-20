@@ -1,4 +1,7 @@
 import { configure } from 'quasar/wrappers'
+import { readFileSync } from 'node:fs'
+
+const pkg = JSON.parse(readFileSync('./package.json', 'utf8'))
 
 export default configure(function (/* ctx */) {
   return {
@@ -22,6 +25,10 @@ export default configure(function (/* ctx */) {
         node: 'node20',
       },
       vueRouterMode: 'hash',
+      env: {
+        VITE_APP_NAME: pkg.productName || pkg.name,
+        VITE_APP_VERSION: pkg.version,
+      },
     },
 
     devServer: {
