@@ -1,0 +1,39 @@
+schema: spec-driven
+
+context: |
+  Project: Micro-frontend shell for Sylvia-IoT IoT platform.
+  Repo: https://github.com/woofdogtw/sylvia-iot-core (platform backend)
+  Docs: https://woofdogtw.github.io/sylvia-iot-core
+
+  Tech stack: JavaScript (ES6+, no TypeScript), Quasar Framework v2, Vue 3
+  Composition API, Pinia, Vue Router, Axios, Vitest, Playwright.
+  Monorepo with npm workspaces: packages/shell, packages/shared, packages/mfe-*.
+
+  Architecture:
+  - Plugin system: plugins register with categories (core, data, router, applications, networks)
+  - Shared axios instance in packages/shared with auth interceptors (Bearer token + 401 retry)
+  - Hash routing + OAuth2 authorization_code flow (password grant NOT supported)
+  - Runtime config: public/js/config.js (modifiable post-build)
+  - i18n: en-US (default) + zh-TW
+  - Root layout route named "root" for plugin route registration
+
+  Conventions:
+  - All code and comments MUST be in English
+  - AI agents MAY git add but MUST NEVER git commit
+  - NEVER access /mnt/* paths
+  - OAuth2 endpoints: only /oauth2 and /v1/auth (no PKCE, no /v1/user)
+  - coremgr is the management entry point wrapping auth/broker APIs
+  - Prefer CSS class + text matching + ARIA roles in E2E tests (no data-testid)
+  - E2E tests use Playwright; at 1280px viewport the Quasar drawer is always
+    visible (show-if-above), do NOT click menu button to open it
+
+  Testing:
+  - Unit: Vitest (packages/shell and packages/mfe-*)
+  - E2E: Playwright in packages/shell/e2e/
+  - Router E2E requires sylvia-router: skills/sylvia-router/scripts/start.sh
+  - Other E2E requires sylvia-iot-core: skills/sylvia-iot-services/scripts/start.sh
+
+rules:
+  tasks:
+    - Use checklist format (- [ ] item) for all task items
+    - Group tasks by phase with ## N. Phase Name headers
