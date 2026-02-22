@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
 
 /**
  * Test the auth endpoint detection logic used by the axios 401 interceptor.
@@ -7,6 +8,39 @@ import { describe, it, expect } from 'vitest'
 function isAuthEndpoint(url) {
   return url.includes('/oauth2') || url.includes('/api/v1/auth')
 }
+
+// Mock quasar/wrappers so boot(fn) just returns fn directly (for testability)
+vi.mock('quasar/wrappers', () => ({ boot: (fn) => fn }))
+
+// Mock the auth store
+vi.mock('stores/auth-store.js', () => ({
+  useAuthStore: vi.fn(() => ({
+    accessToken: 'test-token',
+    init: vi.fn(),
+    refreshAccessToken: vi.fn().mockResolvedValue(false),
+    logout: vi.fn(),
+  })),
+}))
+
+describe('axios boot - window.sylviaShell', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    delete window.sylviaShell
+  })
+
+  it('should expose window.sylviaShell.httpClient after boot', async () => {
+    const bootFn = (await import('boot/axios.js')).default
+    const mockRouter = { push: vi.fn() }
+    const mockStore = {}
+
+    await bootFn({ store: mockStore, router: mockRouter })
+
+    expect(window.sylviaShell).toBeDefined()
+    expect(window.sylviaShell.httpClient).toBeDefined()
+    expect(typeof window.sylviaShell.httpClient.get).toBe('function')
+    expect(typeof window.sylviaShell.httpClient.post).toBe('function')
+  })
+})
 
 describe('axios auth endpoint detection', () => {
   it('should detect OAuth2 endpoints', () => {

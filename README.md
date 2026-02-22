@@ -87,6 +87,29 @@ const dataBase    = window.config?.data?.baseUrl
 const routerBase  = window.config?.router?.baseUrl
 ```
 
+### Making Authenticated API Calls
+
+The shell exposes a pre-configured [Axios](https://axios-http.com/) instance via `window.sylviaShell.httpClient`. This instance automatically:
+
+- Injects the `Authorization: Bearer <token>` header on every request.
+- Retries once with a refreshed token on HTTP 401 responses (for non-auth endpoints).
+- Redirects to the login page if the token refresh fails.
+
+Use it instead of creating your own axios instance:
+
+```js
+// In a Vue component or composable inside your external plugin
+const http = window.sylviaShell.httpClient
+const coremgrBase = window.config?.coremgr?.baseUrl
+
+async function fetchDevices() {
+  const { data } = await http.get(`${coremgrBase}/api/v1/unit/list`)
+  return data.data
+}
+```
+
+> **Note:** Do not bundle your own axios copy in the plugin. Using `window.sylviaShell.httpClient` ensures you share the same interceptor chain (and avoid version mismatches) with the shell.
+
 ### Loading an External Plugin
 
 Serve the plugin JS file from any static file server, then add its URL to `window.config.plugins` in `config.js`:

@@ -15,6 +15,7 @@
   - Runtime configuration via `public/js/config.js` (modifiable post-build without rebuild)
 - **shell**: External plugin loading via `window.config.plugins` URL array
   - ES module dynamic import with `Promise.allSettled` (failed loads are logged and skipped)
+- **shell**: `window.sylviaShell.httpClient` global — pre-configured Axios instance exposed to external plugins (Bearer token injection + 401 auto-retry with refresh)
 - **mfe-core**: Core management micro-frontend plugin
   - User, client, unit, application, network, device, device route, network route, and DL data buffer management pages
 - **mfe-data**: Data micro-frontend plugin
@@ -28,4 +29,5 @@
   - `coremgrUrl()`, `dataUrl()`, `routerUrl()` URL builders
   - `useAuth`, `useConfig` composables
 - CI: GitHub Actions workflows for PR testing (lint, unit, E2E) and release (GitHub Releases + Docker Hub + GHCR)
+  - Docker release produces semver tags: `x.y.z`, `x.y`, `x`, and `latest`
 - Docker: multi-arch image (`linux/amd64`, `linux/arm64`) with router plugin excluded for container deployments (`VITE_INCLUDE_ROUTER=false`)
