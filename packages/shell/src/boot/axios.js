@@ -53,6 +53,9 @@ export default boot(({ store, router }) => {
       return Promise.reject(error)
     },
   )
+
+  // Expose the configured HTTP client for external plugins
+  window.sylviaShell = { httpClient: api }
 })
 
 export { api }
