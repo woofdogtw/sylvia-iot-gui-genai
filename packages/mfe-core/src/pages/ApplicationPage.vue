@@ -43,7 +43,7 @@
     </q-table>
 
     <!-- Add Dialog -->
-    <q-dialog v-model="showAdd" @keyup.enter="submitAdd" @keyup.escape="showAdd = false">
+    <q-dialog v-model="showAdd" @show="onAddDialogShow" @keyup.enter="submitAdd" @keyup.escape="showAdd = false">
       <q-card style="min-width: 450px">
         <q-card-section>
           <div class="text-h6">{{ t('core.common.add') }}</div>
@@ -98,7 +98,7 @@
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat :label="t('core.common.cancel')" @click="showAdd = false" />
-          <q-btn flat color="primary" :label="t('core.common.ok')" @click="submitAdd" />
+          <q-btn flat color="primary" :label="t('core.common.ok')" :disable="!isAddFormValid" @click="submitAdd" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -132,7 +132,7 @@
     </q-dialog>
 
     <!-- Edit Dialog -->
-    <q-dialog v-model="showEdit" @keyup.enter="submitEdit" @keyup.escape="showEdit = false">
+    <q-dialog v-model="showEdit" @show="onEditDialogShow" @keyup.enter="submitEdit" @keyup.escape="showEdit = false">
       <q-card style="min-width: 450px">
         <q-card-section>
           <div class="text-h6">{{ t('core.common.edit') }}</div>
@@ -180,7 +180,7 @@
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat :label="t('core.common.cancel')" @click="showEdit = false" />
-          <q-btn flat color="primary" :label="t('core.common.ok')" @click="submitEdit" />
+          <q-btn flat color="primary" :label="t('core.common.ok')" :disable="!isEditFormValid" @click="submitEdit" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -220,7 +220,7 @@
     </q-dialog>
 
     <!-- Send DL Data Dialog -->
-    <q-dialog v-model="showSend" @keyup.enter="submitSend" @keyup.escape="showSend = false">
+    <q-dialog v-model="showSend" @show="onSendDialogShow" @keyup.enter="submitSend" @keyup.escape="showSend = false">
       <q-card style="min-width: 450px">
         <q-card-section>
           <div class="text-h6">{{ t('core.common.sendData') }}</div>
@@ -250,7 +250,7 @@
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat :label="t('core.common.cancel')" @click="showSend = false" />
-          <q-btn flat color="primary" :label="t('core.common.send')" @click="submitSend" />
+          <q-btn flat color="primary" :label="t('core.common.send')" :disable="!isSendFormValid" @click="submitSend" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -322,7 +322,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar, copyToClipboard } from 'quasar'
 import { useListPage } from '../composables/useListPage.js'
@@ -333,7 +333,7 @@ import {
   parseJsonInfo, trimValue, textToHex,
 } from '../utils/validate.js'
 import { exportCsv } from '../utils/csv.js'
-import { notifyApiError, notifySuccess } from '../utils/notify.js'
+import { showApiError, notifySuccess } from '../utils/notify.js'
 import { formatTime } from '../utils/format.js'
 
 const { t } = useI18n()
@@ -430,6 +430,18 @@ function ruleHex(val) { const r = validateHexPayload(val); return r === true ? t
 const showAdd = ref(false)
 const addFormRef = ref(null)
 const addForm = ref({ code: '', unitId: '', hostUri: '', name: '', ttl: '', length: '', info: '' })
+const isAddFormValid = ref(false)
+
+async function onAddDialogShow() {
+  await nextTick()
+  isAddFormValid.value = await addFormRef.value?.validate(false) ?? false
+}
+
+watch(addForm, async () => {
+  if (!addFormRef.value) return
+  await nextTick()
+  isAddFormValid.value = await addFormRef.value.validate(false) ?? false
+}, { deep: true })
 
 function openAddDialog() {
   addForm.value = { code: '', unitId: selectedUnit.value || '', hostUri: '', name: '', ttl: '', length: '', info: '' }
@@ -463,7 +475,7 @@ async function submitAdd() {
     notifySuccess(t('core.common.createSuccess'))
     refresh()
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 
@@ -482,6 +494,18 @@ const showEdit = ref(false)
 const editFormRef = ref(null)
 const editForm = ref({ hostUri: '', name: '', ttl: '', length: '', password: '', info: '' })
 const editingApp = ref(null)
+const isEditFormValid = ref(false)
+
+async function onEditDialogShow() {
+  await nextTick()
+  isEditFormValid.value = await editFormRef.value?.validate(false) ?? false
+}
+
+watch(editForm, async () => {
+  if (!editFormRef.value) return
+  await nextTick()
+  isEditFormValid.value = await editFormRef.value.validate(false) ?? false
+}, { deep: true })
 
 const hostUriChanged = computed(() => {
   return editingApp.value && editForm.value.hostUri !== editingApp.value.hostUri
@@ -520,7 +544,7 @@ async function submitEdit() {
     showEdit.value = false
     refresh()
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 
@@ -531,6 +555,7 @@ const statsData = ref({})
 let statsTimer = null
 
 function openStatsDialog(row) {
+  if (statsTimer !== null) { clearInterval(statsTimer); statsTimer = null }
   statsItem.value = row
   statsData.value = {}
   showStats.value = true
@@ -557,6 +582,19 @@ async function fetchStats() {
 const showSend = ref(false)
 const sendFormRef = ref(null)
 const sendForm = ref({ deviceId: '', payload: '', payloadType: 'hex' })
+const isSendFormValid = ref(false)
+
+async function onSendDialogShow() {
+  await nextTick()
+  isSendFormValid.value = await sendFormRef.value?.validate(false) ?? false
+}
+
+watch(sendForm, async () => {
+  if (!sendFormRef.value) return
+  await nextTick()
+  isSendFormValid.value = await sendFormRef.value.validate(false) ?? false
+}, { deep: true })
+watch(() => sendForm.value.payloadType, () => { sendFormRef.value?.validate() })
 const deviceOptions = ref([])
 
 const payloadTypeOptions = computed(() => [
@@ -595,7 +633,7 @@ async function submitSend() {
     notifySuccess(t('core.common.sendData'))
     showSend.value = false
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 
@@ -615,13 +653,13 @@ async function submitDelete() {
     notifySuccess(t('core.common.deleteSuccess'))
     showDelete.value = false
     refresh()
-  } catch (err) { notifyApiError(err, t) }
+  } catch (err) { showApiError(err, t) }
 }
 
 async function onExportCsv() {
   try {
     await exportCsv('/api/v1/application/list', 'applications.csv', filterParams)
-  } catch (err) { notifyApiError(err, t) }
+  } catch (err) { showApiError(err, t) }
 }
 
 onMounted(async () => {

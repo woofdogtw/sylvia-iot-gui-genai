@@ -14,6 +14,7 @@
           <q-input
             v-model="form.address"
             :label="t('router.lan.address')"
+            :rules="[v => isValidCIDR(v, t)]"
             dense
             outlined
             class="q-mb-sm"
@@ -23,6 +24,11 @@
             <q-input
               v-model="form.dhcpStart"
               :label="t('router.lan.dhcpStart')"
+              :rules="[
+                v => isValidIPv4(v, t),
+                v => isIPNotGreaterThan(v, form.dhcpEnd, t),
+                v => !isIPInRange(form.address.split('/')[0], v, form.dhcpEnd) || t('router.validate.ipInDhcpRange'),
+              ]"
               dense
               outlined
               class="q-mb-sm"
@@ -30,6 +36,7 @@
             <q-input
               v-model="form.dhcpEnd"
               :label="t('router.lan.dhcpEnd')"
+              :rules="[v => isValidIPv4(v, t), v => isIPNotGreaterThan(form.dhcpStart, v, t)]"
               dense
               outlined
               class="q-mb-sm"
@@ -38,6 +45,7 @@
               v-model.number="form.leaseTime"
               :label="t('router.lan.leaseTime')"
               type="number"
+              :rules="[v => isIntegerInRange(60, 604800)(v, t)]"
               dense
               outlined
               class="q-mb-sm"
@@ -46,7 +54,7 @@
         </q-form>
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn flat color="primary" :label="t('router.common.save')" @click="submitLan" />
+        <q-btn flat color="primary" :label="t('router.common.save')" :disable="!isFormValid" @click="submitLan" />
       </q-card-actions>
     </q-card>
 
@@ -68,10 +76,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { lanApi } from '../api/index.js'
-import { notifyApiError, notifySuccess } from '../utils/notify.js'
+import { showApiError, notifySuccess } from '../utils/notify.js'
+import { isValidCIDR, isValidIPv4, isIntegerInRange, isIPInRange, isIPNotGreaterThan } from '../utils/validate.js'
 
 const { t } = useI18n()
 
@@ -84,6 +93,7 @@ const form = ref({
   leaseTime: 86400,
 })
 const leases = ref([])
+const isFormValid = ref(true)
 
 const leaseColumns = computed(() => [
   { name: 'ip', label: t('router.lan.leaseIp'), field: 'ip', align: 'left' },
@@ -97,6 +107,12 @@ function formatTime(ms) {
   if (!ms) return '-'
   return new Date(ms).toLocaleString()
 }
+
+watch(form, async () => {
+  if (!formRef.value) return
+  await nextTick()
+  isFormValid.value = await formRef.value.validate(false) ?? false
+}, { deep: true })
 
 async function fetchConfig() {
   try {
@@ -112,7 +128,7 @@ async function fetchConfig() {
       leaseTime: conf.leaseTime || 86400,
     }
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 
@@ -126,7 +142,7 @@ async function fetchLeases() {
       endStr: formatTime(l.ends),
     }))
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 
@@ -136,6 +152,9 @@ function fetchAll() {
 }
 
 async function submitLan() {
+  const valid = await formRef.value.validate()
+  if (!valid) return
+
   try {
     const conf4 = { address: form.value.address }
     if (form.value.dhcpEnabled) {
@@ -147,7 +166,7 @@ async function submitLan() {
     notifySuccess(t('router.common.saveSuccess'))
     fetchConfig()
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 

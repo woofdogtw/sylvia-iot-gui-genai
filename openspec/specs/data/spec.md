@@ -74,6 +74,13 @@ All data pages SHALL follow a consistent read-only list layout pattern.
 - **THEN** a toggle button SHALL be available to switch between hex and decoded text display
 - **AND** the default display SHALL be hex
 
+#### Scenario: Error display
+
+- **WHEN** an API call fails
+- **THEN** a Quasar dialog SHALL appear with a title showing the localized error code label from the `apiError.*` i18n translations in the shared package (or a generic error title if the code is unknown)
+- **AND** the dialog body SHALL display the raw `message` string from the API error response (`error.response.data.message`), falling back to `HTTP {status}: {statusText}` when no message is present, or to `error.message` when there is no response
+- **AND** the dialog SHALL persist until the user explicitly dismisses it by clicking OK
+
 ### Requirement: Application Uplink Data Page
 
 The application uplink data page SHALL display uplink messages from devices to applications.

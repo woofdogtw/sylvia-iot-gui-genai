@@ -1,6 +1,6 @@
-import { api, coremgrUrl } from '@sylvia-iot/shared'
+import { api, dataUrl } from '@sylvia-iot/shared'
 
-const BASE = '/data/api/v1'
+const BASE = '/api/v1'
 
 /**
  * Create read-only list/count API functions for a data resource.
@@ -10,10 +10,10 @@ const BASE = '/data/api/v1'
 function createDataApi(resource) {
   return {
     list(params) {
-      return api.get(coremgrUrl(`${BASE}/${resource}/list`), { params })
+      return api.get(dataUrl(`${BASE}/${resource}/list`), { params })
     },
     count(params) {
-      return api.get(coremgrUrl(`${BASE}/${resource}/count`), { params })
+      return api.get(dataUrl(`${BASE}/${resource}/count`), { params })
     },
   }
 }

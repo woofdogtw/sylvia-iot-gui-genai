@@ -52,6 +52,8 @@ All core management pages SHALL follow a consistent layout pattern.
 - **THEN** a modal dialog SHALL open with form fields
 - **AND** required fields SHALL be validated before submission
 - **AND** validation errors SHALL display inline
+- **AND** validation SHALL be triggered immediately when the dialog opens, without waiting for user interaction
+- **AND** the OK/Submit button SHALL be disabled until all validation rules pass; it SHALL re-enable as soon as the form becomes valid
 - **AND** all text inputs except password fields SHALL be trimmed of leading/trailing whitespace
 - **AND** JSON fields (e.g., Info) SHALL validate that input is a valid JSON object; empty input SHALL be submitted as `{}`
 - **AND** pressing Enter SHALL trigger the OK/Submit action
@@ -84,8 +86,9 @@ All core management pages SHALL follow a consistent layout pattern.
 #### Scenario: Error display
 
 - **WHEN** an API call fails
-- **THEN** the error message SHALL be displayed using the localized apiError translations from the shared package
-- **AND** the error SHALL be shown as a Quasar notification
+- **THEN** a Quasar dialog SHALL appear with a title showing the localized error code label from the `apiError.*` i18n translations in the shared package (or a generic error title if the code is unknown)
+- **AND** the dialog body SHALL display the raw `message` string from the API error response (`error.response.data.message`), falling back to `HTTP {status}: {statusText}` when no message is present, or to `error.message` when there is no response
+- **AND** the dialog SHALL persist until the user explicitly dismisses it by clicking OK
 
 ### Requirement: Role-Based Access Control
 

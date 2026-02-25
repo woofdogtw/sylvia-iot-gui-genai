@@ -3,7 +3,6 @@
     <div class="row items-center q-mb-md">
       <div class="text-h6">{{ t('router.wwan.title') }}</div>
       <q-space />
-      <q-btn v-if="supported" flat round icon="refresh" :title="t('router.common.refresh')" @click="fetchConfig" />
     </div>
 
     <q-banner v-if="!supported && !loading" class="bg-warning text-white">
@@ -15,40 +14,49 @@
     </div>
 
     <template v-if="supported && !loading">
-      <!-- Connection Status Card -->
+      <!-- Connection Status -->
       <q-card class="q-mb-md">
         <q-card-section>
-          <q-toggle v-model="form.enable" :label="form.enable ? t('router.common.enabled') : t('router.common.disabled')" class="q-mb-sm" />
-          <div v-if="connectedSsid" class="q-mt-sm">
-            <q-badge color="positive">{{ t('router.wwan.connectedTo') }}: {{ connectedSsid }}</q-badge>
-          </div>
-          <div v-if="connIp" class="text-caption q-mt-xs">{{ t('router.wan.address') }}: {{ connIp }}</div>
+          <q-list dense>
+            <q-item v-if="status.ssid">
+              <q-item-section>
+                <q-item-label caption>{{ t('router.wwan.ssid') }}</q-item-label>
+                <q-item-label>{{ status.ssid }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="status.hostIp">
+              <q-item-section>
+                <q-item-label caption>{{ t('router.wwan.hostIp') }}</q-item-label>
+                <q-item-label>{{ status.hostIp }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="status.gateway">
+              <q-item-section>
+                <q-item-label caption>{{ t('router.wwan.gateway') }}</q-item-label>
+                <q-item-label>{{ status.gateway }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="status.dns">
+              <q-item-section>
+                <q-item-label caption>{{ t('router.wwan.dns') }}</q-item-label>
+                <q-item-label>{{ status.dns }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="!status.ssid && !status.hostIp">
+              <q-item-section>
+                <q-item-label class="text-grey">{{ t('router.wan.disconnected') }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
         </q-card-section>
-      </q-card>
-
-      <!-- Connect Form -->
-      <q-card v-if="form.enable" class="q-mb-md">
-        <q-card-section>
-          <q-input v-model="form.ssid" :label="t('router.wwan.ssid')" dense outlined class="q-mb-sm" />
-          <q-input v-model="form.password" :label="t('router.wwan.password')" type="password" dense outlined class="q-mb-sm" />
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat color="primary" :label="t('router.common.save')" @click="submitConfig" />
+        <q-card-actions v-if="status.connected" align="right">
+          <q-btn flat color="negative" :label="t('router.wwan.disconnect')" @click="disconnectWwan" />
         </q-card-actions>
       </q-card>
 
-      <!-- Scan Section -->
-      <q-card v-if="form.enable">
+      <!-- AP List -->
+      <q-card>
         <q-card-section>
-          <div class="row items-center q-mb-sm">
-            <q-btn
-              :label="scanning ? t('router.wwan.scanning') : t('router.wwan.scan')"
-              :loading="scanning"
-              flat
-              color="primary"
-              @click="scanAps"
-            />
-          </div>
           <q-table
             v-if="apList.length"
             :rows="apList"
@@ -56,55 +64,95 @@
             row-key="ssid"
             dense
             flat
-            selection="single"
-            v-model:selected="selectedAp"
-            @row-click="onApClick"
-          />
-          <div v-else-if="scanned" class="text-caption">{{ t('router.wwan.noAps') }}</div>
+          >
+            <template #body-cell-connect="props">
+              <q-td :props="props">
+                <q-btn
+                  flat
+                  dense
+                  color="primary"
+                  :label="t('router.wwan.connect')"
+                  @click="onConnectClick(props.row)"
+                />
+              </q-td>
+            </template>
+          </q-table>
+          <div v-else class="text-caption text-grey">{{ t('router.wwan.noAps') }}</div>
         </q-card-section>
       </q-card>
     </template>
+
+    <!-- Password Dialog -->
+    <q-dialog v-model="showPasswordDialog" @show="onPasswordDialogShow">
+      <q-card style="min-width: 320px">
+        <q-card-section>
+          <div class="text-subtitle1">{{ connectTarget?.ssid }}</div>
+        </q-card-section>
+        <q-card-section>
+          <q-form ref="pwFormRef" greedy>
+            <q-input
+              v-model="connectPassword"
+              :label="t('router.wwan.enterPassword')"
+              type="password"
+              :rules="[v => isNonEmpty(v, t)]"
+              dense
+              outlined
+              autofocus
+            />
+          </q-form>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat :label="t('router.common.cancel')" @click="showPasswordDialog = false" />
+          <q-btn flat color="primary" :label="t('router.common.save')" :disable="!isPwFormValid" @click="onPasswordConfirm" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, shallowRef, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { wwanApi } from '../api/index.js'
-import { notifyApiError, notifySuccess } from '../utils/notify.js'
+import { showApiError, notifySuccess } from '../utils/notify.js'
+import { isNonEmpty } from '../utils/validate.js'
 
 const { t } = useI18n()
 
 const loading = ref(true)
 const supported = ref(true)
-const scanning = ref(false)
-const scanned = ref(false)
-const apList = ref([])
-const selectedAp = ref([])
-const connectedSsid = ref('')
-const connIp = ref('')
-const form = ref({ enable: false, ssid: '', password: '' })
+const apList = shallowRef([])
+const status = ref({ ssid: '', hostIp: '', gateway: '', dns: '', connected: false })
+
+const connectTarget = ref(null)
+const showPasswordDialog = ref(false)
+const connectPassword = ref('')
+const pwFormRef = ref(null)
+const isPwFormValid = ref(false)
+
+async function onPasswordDialogShow() {
+  await nextTick()
+  isPwFormValid.value = await pwFormRef.value?.validate(false) ?? false
+}
+
+watch(connectPassword, async () => {
+  if (!pwFormRef.value) return
+  await nextTick()
+  isPwFormValid.value = await pwFormRef.value.validate(false) ?? false
+})
 
 const apColumns = computed(() => [
   { name: 'ssid', label: t('router.wwan.ssid'), field: 'ssid', align: 'left' },
   { name: 'security', label: t('router.wwan.security'), field: 'security', align: 'left' },
   { name: 'channel', label: t('router.wwan.channel'), field: 'channel', align: 'center' },
   { name: 'signal', label: t('router.wwan.signal'), field: 'signal', align: 'center' },
+  { name: 'connect', label: '', field: 'connect', align: 'center' },
 ])
 
-watch(selectedAp, (val) => {
-  if (val.length) {
-    form.value.ssid = val[0].ssid
-    form.value.password = ''
-  }
-})
+let statusTimer = null
+let scanTimer = null
 
-function onApClick(evt, row) {
-  selectedAp.value = [row]
-}
-
-async function fetchConfig() {
-  loading.value = true
+async function pollStatus() {
   try {
     const res = await wwanApi.get()
     const data = res.data?.data
@@ -112,53 +160,104 @@ async function fetchConfig() {
       supported.value = false
       return
     }
-    form.value.enable = !!data.enable
-    form.value.ssid = data.conf?.ssid || ''
-    form.value.password = ''
-    connectedSsid.value = data.conf?.ssid || ''
-    connIp.value = data.conn4?.address || ''
+    status.value = {
+      ssid: data.conf?.ssid || '',
+      hostIp: data.conn4?.address || '',
+      gateway: data.conn4?.gateway || '',
+      dns: Array.isArray(data.conn4?.dns) ? data.conn4.dns.join(', ') : (data.conn4?.dns || ''),
+      connected: !!data.conn4?.address,
+    }
     supported.value = true
   } catch (err) {
     if (err.response?.status === 404) {
       supported.value = false
     } else {
-      notifyApiError(err, t)
+      showApiError(err, t)
     }
-  } finally {
-    loading.value = false
   }
 }
 
-async function scanAps() {
-  scanning.value = true
-  scanned.value = false
+async function pollApList() {
   try {
     const res = await wwanApi.scan()
     apList.value = res.data?.data || []
-    scanned.value = true
-  } catch (err) {
-    notifyApiError(err, t)
-  } finally {
-    scanning.value = false
+  } catch {
+    // scan errors are silent — status polling handles critical errors
   }
 }
 
-async function submitConfig() {
+function scheduleNextStatus() {
+  if (statusTimer !== null) return   // already scheduled or stopped
+  statusTimer = setTimeout(async () => {
+    statusTimer = null               // free slot before awaiting
+    await pollStatus()
+    if (supported.value) scheduleNextStatus()
+  }, 5000)
+}
+
+function scheduleNextScan() {
+  if (scanTimer !== null) return
+  scanTimer = setTimeout(async () => {
+    scanTimer = null
+    await pollApList()
+    if (supported.value) scheduleNextScan()
+  }, 5000)
+}
+
+async function disconnectWwan() {
   try {
-    const body = { enable: form.value.enable }
-    if (form.value.enable) {
-      body.conf = { ssid: form.value.ssid }
-      if (form.value.password) {
-        body.conf.password = form.value.password
-      }
+    await wwanApi.update({ enable: false, conf: { ssid: status.value.ssid } })
+    await pollStatus()
+  } catch (err) {
+    showApiError(err, t)
+  }
+}
+
+function onConnectClick(ap) {
+  if (ap.security === 'none' || ap.security === 'open') {
+    doConnect(ap.ssid, '')
+  } else {
+    connectTarget.value = ap
+    connectPassword.value = ''
+    showPasswordDialog.value = true
+  }
+}
+
+async function onPasswordConfirm() {
+  const valid = await pwFormRef.value.validate()
+  if (!valid) return
+  await doConnect(connectTarget.value.ssid, connectPassword.value)
+  showPasswordDialog.value = false
+}
+
+async function doConnect(ssid, password) {
+  try {
+    const body = { enable: true, conf: { ssid } }
+    if (password) {
+      body.conf.password = password
     }
     await wwanApi.update(body)
     notifySuccess(t('router.common.saveSuccess'))
-    fetchConfig()
+    await pollStatus()
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 
-onMounted(fetchConfig)
+onMounted(async () => {
+  await pollStatus()
+  loading.value = false
+  if (supported.value) {
+    pollApList()
+    scheduleNextStatus()
+    scheduleNextScan()
+  }
+})
+
+onUnmounted(() => {
+  clearTimeout(statusTimer)
+  statusTimer = false   // non-null sentinel: prevents rescheduling from in-flight callbacks
+  clearTimeout(scanTimer)
+  scanTimer = false
+})
 </script>

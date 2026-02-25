@@ -85,7 +85,7 @@ import { useListPage } from '../composables/useListPage.js'
 import { useRoles } from '../composables/useRoles.js'
 import { networkDlDataApi } from '../api/index.js'
 import { exportCsv } from '../utils/csv.js'
-import { notifyApiError } from '../utils/notify.js'
+import { showApiError } from '../utils/notify.js'
 import { formatTime, hexToText } from '../utils/format.js'
 
 const { t } = useI18n()
@@ -182,7 +182,7 @@ async function onExportCsv() {
     if (filterParams.tstart) params.tstart = filterParams.tstart
     if (filterParams.tend) params.tend = filterParams.tend
     await exportCsv('/data/api/v1/network-dldata/list', 'network-dldata.csv', params)
-  } catch (err) { notifyApiError(err, t) }
+  } catch (err) { showApiError(err, t) }
 }
 
 onMounted(async () => { await loadUnits(); fetchData() })

@@ -42,6 +42,7 @@ async function fetchAndSchedule() {
     const now = ms
     const msIntoMinute = now % 60000
     const delay = 60000 - msIntoMinute + 500 // add 500ms buffer
+    if (timer === false) return  // unmounted during fetch
     timer = setTimeout(fetchAndSchedule, delay)
   } catch {
     visible.value = false
@@ -53,6 +54,7 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  if (timer) clearTimeout(timer)
+  clearTimeout(timer)
+  timer = false  // sentinel: prevents rescheduling from in-flight callback
 })
 </script>

@@ -38,6 +38,7 @@ export default configure(function (/* ctx */) {
     framework: {
       plugins: [
         'Dark',
+        'Dialog',
         'LocalStorage',
         'Notify',
       ],

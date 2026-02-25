@@ -58,49 +58,73 @@
     </div>
 
     <!-- Edit Dialog -->
-    <q-dialog v-model="showEdit" @keyup.escape="showEdit = false">
+    <q-dialog v-model="showEdit" @show="onEditDialogShow" @keyup.escape="showEdit = false">
       <q-card style="min-width: 450px">
         <q-card-section>
           <div class="text-h6">{{ editWanId }}</div>
         </q-card-section>
         <q-card-section>
-          <q-select
-            v-model="editForm.type"
-            :label="t('router.wan.type')"
-            :options="typeOptions"
-            emit-value
-            map-options
-            dense
-            outlined
-            class="q-mb-sm"
-          />
-
-          <template v-if="editForm.type === 'ethernet'">
+          <q-form ref="editFormRef" greedy>
             <q-select
-              v-model="editForm.type4"
+              v-model="editForm.type"
               :label="t('router.wan.type')"
-              :options="subTypeOptions"
+              :options="typeOptions"
               emit-value
               map-options
               dense
               outlined
               class="q-mb-sm"
             />
-            <template v-if="editForm.type4 === 'static'">
-              <q-input v-model="editForm.address" :label="t('router.wan.address')" dense outlined class="q-mb-sm" />
-              <q-input v-model="editForm.gateway" :label="t('router.wan.gateway')" dense outlined class="q-mb-sm" />
-              <q-input v-model="editForm.dns" :label="t('router.wan.dns')" hint="comma-separated" dense outlined class="q-mb-sm" />
-            </template>
-          </template>
 
-          <template v-if="editForm.type === 'pppoe'">
-            <q-input v-model="editForm.username" :label="t('router.wan.username')" dense outlined class="q-mb-sm" />
-            <q-input v-model="editForm.password" :label="t('router.wan.password')" type="password" dense outlined class="q-mb-sm" />
-          </template>
+            <template v-if="editForm.type === 'ethernet'">
+              <q-select
+                v-model="editForm.type4"
+                :label="t('router.wan.type')"
+                :options="subTypeOptions"
+                emit-value
+                map-options
+                dense
+                outlined
+                class="q-mb-sm"
+              />
+              <template v-if="editForm.type4 === 'static'">
+                <q-input
+                  v-model="editForm.address"
+                  :label="t('router.wan.address')"
+                  :rules="[v => isValidCIDR(v, t)]"
+                  dense
+                  outlined
+                  class="q-mb-sm"
+                />
+                <q-input
+                  v-model="editForm.gateway"
+                  :label="t('router.wan.gateway')"
+                  :rules="[v => isValidIPv4(v, t)]"
+                  dense
+                  outlined
+                  class="q-mb-sm"
+                />
+                <q-input
+                  v-model="editForm.dns"
+                  :label="t('router.wan.dns')"
+                  hint="comma-separated"
+                  :rules="[v => validateDns(v)]"
+                  dense
+                  outlined
+                  class="q-mb-sm"
+                />
+              </template>
+            </template>
+
+            <template v-if="editForm.type === 'pppoe'">
+              <q-input v-model="editForm.username" :label="t('router.wan.username')" :rules="[v => isNonEmpty(v, t)]" dense outlined class="q-mb-sm" />
+              <q-input v-model="editForm.password" :label="t('router.wan.password')" type="password" :rules="[v => isNonEmpty(v, t)]" dense outlined class="q-mb-sm" />
+            </template>
+          </q-form>
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat :label="t('router.common.cancel')" @click="showEdit = false" />
-          <q-btn flat color="primary" :label="t('router.common.save')" @click="submitEdit" />
+          <q-btn flat color="primary" :label="t('router.common.save')" :disable="!isEditFormValid" @click="submitEdit" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -108,10 +132,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { wanApi } from '../api/index.js'
-import { notifyApiError, notifySuccess } from '../utils/notify.js'
+import { showApiError, notifySuccess } from '../utils/notify.js'
+import { isValidCIDR, isValidIPv4, isNonEmpty } from '../utils/validate.js'
 
 const { t } = useI18n()
 
@@ -119,7 +144,20 @@ const loading = ref(false)
 const wanList = ref([])
 const showEdit = ref(false)
 const editWanId = ref('')
+const editFormRef = ref(null)
 const editForm = ref({ type: 'disable', type4: 'dhcp', address: '', gateway: '', dns: '', username: '', password: '' })
+const isEditFormValid = ref(false)
+
+async function onEditDialogShow() {
+  await nextTick()
+  isEditFormValid.value = await editFormRef.value?.validate(false) ?? false
+}
+
+watch(editForm, async () => {
+  if (!editFormRef.value) return
+  await nextTick()
+  isEditFormValid.value = await editFormRef.value.validate(false) ?? false
+}, { deep: true })
 
 const typeOptions = computed(() => [
   { label: t('router.wan.typeDisable'), value: 'disable' },
@@ -138,13 +176,22 @@ function typeLabel(type) {
   return t('router.wan.typeDisable')
 }
 
+function validateDns(val) {
+  const entries = val.split(',').map((s) => s.trim()).filter(Boolean)
+  for (const entry of entries) {
+    const result = isValidIPv4(entry, t)
+    if (result !== true) return result
+  }
+  return true
+}
+
 async function fetchWanList() {
   loading.value = true
   try {
     const res = await wanApi.list()
     wanList.value = res.data?.data || []
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   } finally {
     loading.value = false
   }
@@ -166,6 +213,9 @@ function openEdit(wan) {
 }
 
 async function submitEdit() {
+  const valid = await editFormRef.value.validate()
+  if (!valid) return
+
   try {
     const body = { type: editForm.value.type }
     if (editForm.value.type === 'ethernet') {
@@ -188,7 +238,7 @@ async function submitEdit() {
     showEdit.value = false
     fetchWanList()
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 

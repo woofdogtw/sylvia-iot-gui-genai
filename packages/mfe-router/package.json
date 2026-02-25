@@ -9,6 +9,13 @@
     "./i18n": "./src/i18n/index.js",
     "./src/*": "./src/*"
   },
+  "scripts": {
+    "test": "vitest run",
+    "lint": "eslint --ext .js,.vue src"
+  },
+  "devDependencies": {
+    "vitest": "^4.0.18"
+  },
   "dependencies": {
     "@sylvia-iot/shared": "*"
   }
