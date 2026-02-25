@@ -54,13 +54,13 @@ export function detectBrowserLocale() {
 /**
  * Detect initial dark mode preference.
  * If localStorage has a saved value, use it.
- * Otherwise, default to dark on mobile devices and light on desktop.
+ * Otherwise, default to dark on touch devices (mobile/tablet) and light on desktop.
  */
 function detectInitialDark() {
   const saved = localStorage.getItem('isDark')
   if (saved !== null) {
     return saved === 'true'
   }
-  // Detect mobile: touch-primary devices (phones, tablets)
+  // Touch-primary devices (phones, tablets) default to dark; desktop defaults to light
   return window.matchMedia('(pointer: coarse)').matches
 }
