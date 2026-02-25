@@ -154,6 +154,7 @@ import { ref, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
+import { useAppStore } from 'stores/app-store.js'
 import { useAuthStore } from 'stores/auth-store.js'
 import { usePluginStore } from 'stores/plugin-store.js'
 import { api, coremgrUrl } from '@sylvia-iot/shared'
@@ -162,6 +163,7 @@ const { t } = useI18n()
 const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
+useAppStore() // Initialize theme from saved preferences / OS preference
 const authStore = useAuthStore()
 const pluginStore = usePluginStore()
 
