@@ -37,7 +37,7 @@
           </tr>
           <tr>
             <td class="headerItem">Test Date:</td>
-            <td class="headerValue">2026-02-25 13:14:30</td>
+            <td class="headerValue">2026-02-25 14:46:00</td>
             <td></td>
             <td class="headerItem">Functions:</td>
             <td class="headerCovTableEntryMed">87.5&nbsp;%</td>
@@ -116,14 +116,14 @@
 <span id="L54"><span class="lineNum">      54</span>              : /**</span>
 <span id="L55"><span class="lineNum">      55</span>              :  * Detect initial dark mode preference.</span>
 <span id="L56"><span class="lineNum">      56</span>              :  * If localStorage has a saved value, use it.</span>
-<span id="L57"><span class="lineNum">      57</span>              :  * Otherwise, default to dark on mobile devices and light on desktop.</span>
+<span id="L57"><span class="lineNum">      57</span>              :  * Otherwise, default to dark on touch devices (mobile/tablet) and light on desktop.</span>
 <span id="L58"><span class="lineNum">      58</span>              :  */</span>
 <span id="L59"><span class="lineNum">      59</span> <span class="tlaGNC">          16 : function detectInitialDark() {</span></span>
 <span id="L60"><span class="lineNum">      60</span> <span class="tlaGNC">          16 :   const saved = localStorage.getItem('isDark')</span></span>
 <span id="L61"><span class="lineNum">      61</span> <span class="tlaGNC">          16 :   if (saved !== null) {</span></span>
 <span id="L62"><span class="lineNum">      62</span> <span class="tlaGNC">           2 :     return saved === 'true'</span></span>
 <span id="L63"><span class="lineNum">      63</span>              :   }</span>
-<span id="L64"><span class="lineNum">      64</span>              :   // Detect mobile: touch-primary devices (phones, tablets)</span>
+<span id="L64"><span class="lineNum">      64</span>              :   // Touch-primary devices (phones, tablets) default to dark; desktop defaults to light</span>
 <span id="L65"><span class="lineNum">      65</span> <span class="tlaGNC">          14 :   return window.matchMedia('(pointer: coarse)').matches</span></span>
 <span id="L66"><span class="lineNum">      66</span>              : }</span>
         </pre>
