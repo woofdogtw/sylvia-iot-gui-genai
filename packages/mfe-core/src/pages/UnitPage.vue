@@ -42,7 +42,7 @@
     </q-table>
 
     <!-- Add Dialog -->
-    <q-dialog v-model="showAdd" @keyup.enter="submitAdd" @keyup.escape="showAdd = false">
+    <q-dialog v-model="showAdd" @show="onAddDialogShow" @keyup.enter="submitAdd" @keyup.escape="showAdd = false">
       <q-card style="min-width: 400px">
         <q-card-section>
           <div class="text-h6">{{ t('core.common.add') }}</div>
@@ -92,7 +92,7 @@
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat :label="t('core.common.cancel')" @click="showAdd = false" />
-          <q-btn flat color="primary" :label="t('core.common.ok')" @click="submitAdd" />
+          <q-btn flat color="primary" :label="t('core.common.ok')" :disable="!isAddFormValid" @click="submitAdd" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -217,7 +217,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useQuasar } from 'quasar'
 import { useListPage } from '../composables/useListPage.js'
@@ -225,7 +225,7 @@ import { useRoles } from '../composables/useRoles.js'
 import { unitApi, userApi } from '../api/index.js'
 import { validateCode, validateJsonObject, parseJsonInfo, trimValue } from '../utils/validate.js'
 import { exportCsv } from '../utils/csv.js'
-import { notifyApiError, notifySuccess } from '../utils/notify.js'
+import { showApiError, notifySuccess } from '../utils/notify.js'
 import { formatTime } from '../utils/format.js'
 
 const { t } = useI18n()
@@ -347,6 +347,18 @@ async function resolveOwner(ownerId) {
 const showAdd = ref(false)
 const addFormRef = ref(null)
 const addForm = ref({ code: '', name: '', ownerId: null, info: '' })
+const isAddFormValid = ref(false)
+
+async function onAddDialogShow() {
+  await nextTick()
+  isAddFormValid.value = await addFormRef.value?.validate(false) ?? false
+}
+
+watch(addForm, async () => {
+  if (!addFormRef.value) return
+  await nextTick()
+  isAddFormValid.value = await addFormRef.value.validate(false) ?? false
+}, { deep: true })
 
 function openAddDialog() {
   addForm.value = { code: '', name: '', ownerId: null, info: '' }
@@ -368,7 +380,7 @@ async function submitAdd() {
     showAdd.value = false
     refresh()
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 
@@ -407,7 +419,7 @@ async function submitEdit() {
     showEdit.value = false
     refresh()
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 
@@ -432,7 +444,7 @@ async function submitDelete() {
     showDelete.value = false
     refresh()
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 
@@ -440,7 +452,7 @@ async function onExportCsv() {
   try {
     await exportCsv('/api/v1/unit/list', 'units.csv', filterParams)
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 

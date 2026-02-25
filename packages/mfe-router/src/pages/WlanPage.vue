@@ -16,37 +16,67 @@
 
     <q-card v-if="supported && !loading">
       <q-card-section>
-        <q-toggle v-model="form.enable" :label="form.enable ? t('router.common.enabled') : t('router.common.disabled')" class="q-mb-sm" />
-        <template v-if="form.enable">
-          <q-input v-model="form.ssid" :label="t('router.wlan.ssid')" dense outlined class="q-mb-sm" />
-          <q-select
-            v-model="form.channel"
-            :label="t('router.wlan.channel')"
-            :options="channelOptions"
-            dense
-            outlined
-            class="q-mb-sm"
-          />
-          <q-input v-model="form.password" :label="t('router.wlan.password')" type="password" dense outlined class="q-mb-sm" />
-        </template>
+        <q-form ref="formRef" greedy>
+          <q-toggle v-model="form.enable" :label="form.enable ? t('router.common.enabled') : t('router.common.disabled')" class="q-mb-sm" />
+          <template v-if="form.enable">
+            <q-input
+              v-model="form.ssid"
+              :label="t('router.wlan.ssid')"
+              :rules="[v => isNonEmpty(v, t)]"
+              dense
+              outlined
+              class="q-mb-sm"
+            />
+            <q-select
+              v-model="form.channel"
+              :label="t('router.wlan.channel')"
+              :options="channelOptions"
+              dense
+              outlined
+              class="q-mb-sm"
+            />
+            <q-input
+              v-model="form.password"
+              :label="t('router.wlan.password')"
+              :type="showPassword ? 'text' : 'password'"
+              :rules="[v => isMinLength(8)(v, t), v => isMaxLength(63)(v, t)]"
+              dense
+              outlined
+              class="q-mb-sm"
+            >
+              <template #append>
+                <q-btn
+                  flat
+                  round
+                  :icon="showPassword ? 'visibility_off' : 'visibility'"
+                  :title="showPassword ? t('router.wlan.hidePassword') : t('router.wlan.showPassword')"
+                  @click="showPassword = !showPassword"
+                />
+              </template>
+            </q-input>
+          </template>
+        </q-form>
       </q-card-section>
       <q-card-actions align="right">
-        <q-btn flat color="primary" :label="t('router.common.save')" @click="submitConfig" />
+        <q-btn flat color="primary" :label="t('router.common.save')" :disable="!isFormValid" @click="submitConfig" />
       </q-card-actions>
     </q-card>
   </q-page>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { wlanApi } from '../api/index.js'
-import { notifyApiError, notifySuccess } from '../utils/notify.js'
+import { showApiError, notifySuccess } from '../utils/notify.js'
+import { isNonEmpty, isMinLength, isMaxLength } from '../utils/validate.js'
 
 const { t } = useI18n()
 
 const loading = ref(true)
 const supported = ref(true)
+const showPassword = ref(false)
+const formRef = ref(null)
 const channelOptions = Array.from({ length: 11 }, (_, i) => i + 1)
 const form = ref({
   enable: false,
@@ -54,6 +84,13 @@ const form = ref({
   channel: 1,
   password: '',
 })
+const isFormValid = ref(true)
+
+watch(form, async () => {
+  if (!formRef.value) return
+  await nextTick()
+  isFormValid.value = await formRef.value.validate(false) ?? false
+}, { deep: true })
 
 async function fetchConfig() {
   loading.value = true
@@ -76,7 +113,7 @@ async function fetchConfig() {
     if (err.response?.status === 404) {
       supported.value = false
     } else {
-      notifyApiError(err, t)
+      showApiError(err, t)
     }
   } finally {
     loading.value = false
@@ -84,6 +121,9 @@ async function fetchConfig() {
 }
 
 async function submitConfig() {
+  const valid = await formRef.value.validate()
+  if (!valid) return
+
   try {
     const body = { enable: form.value.enable }
     if (form.value.enable) {
@@ -96,7 +136,7 @@ async function submitConfig() {
     await wlanApi.update(body)
     notifySuccess(t('router.common.saveSuccess'))
   } catch (err) {
-    notifyApiError(err, t)
+    showApiError(err, t)
   }
 }
 

@@ -36,7 +36,7 @@
     >
       <template #body-cell-status="props">
         <q-td :props="props">
-          <q-badge :color="statusColor(props.row.resp)">{{ statusLabel(props.row.resp) }}</q-badge>
+          <q-badge :color="statusColor(props.row.status)">{{ statusLabel(props.row.status) }}</q-badge>
         </q-td>
       </template>
       <template #body-cell-data="props">
@@ -84,7 +84,7 @@ import { useListPage } from '../composables/useListPage.js'
 import { useRoles } from '../composables/useRoles.js'
 import { applicationDlDataApi } from '../api/index.js'
 import { exportCsv } from '../utils/csv.js'
-import { notifyApiError } from '../utils/notify.js'
+import { showApiError } from '../utils/notify.js'
 import { formatTime, hexToText } from '../utils/format.js'
 
 const { t } = useI18n()
@@ -179,7 +179,7 @@ async function onExportCsv() {
     if (filterParams.tstart) params.tstart = filterParams.tstart
     if (filterParams.tend) params.tend = filterParams.tend
     await exportCsv('/data/api/v1/application-dldata/list', 'application-dldata.csv', params)
-  } catch (err) { notifyApiError(err, t) }
+  } catch (err) { showApiError(err, t) }
 }
 
 onMounted(async () => { await loadUnits(); fetchData() })

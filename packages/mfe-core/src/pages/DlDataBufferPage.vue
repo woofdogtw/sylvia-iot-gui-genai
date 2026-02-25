@@ -66,7 +66,7 @@ import { useListPage } from '../composables/useListPage.js'
 import { useRoles } from '../composables/useRoles.js'
 import { dlDataBufferApi, unitApi } from '../api/index.js'
 import { exportCsv } from '../utils/csv.js'
-import { notifyApiError, notifySuccess } from '../utils/notify.js'
+import { showApiError, notifySuccess } from '../utils/notify.js'
 import { formatTime } from '../utils/format.js'
 
 const { t } = useI18n()
@@ -132,12 +132,12 @@ const deleteItem = ref({})
 function openDeleteDialog(row) { deleteItem.value = row; showDelete.value = true }
 async function submitDelete() {
   try { await dlDataBufferApi.delete(deleteItem.value.dataId); notifySuccess(t('core.common.deleteSuccess')); showDelete.value = false; refresh() }
-  catch (err) { notifyApiError(err, t) }
+  catch (err) { showApiError(err, t) }
 }
 
 async function onExportCsv() {
   try { await exportCsv('/api/v1/dldata-buffer/list', 'dldata-buffers.csv', filterParams) }
-  catch (err) { notifyApiError(err, t) }
+  catch (err) { showApiError(err, t) }
 }
 
 onMounted(async () => { await loadUnits(); fetchData() })

@@ -37,3 +37,7 @@ rules:
   tasks:
     - Use checklist format (- [ ] item) for all task items
     - Group tasks by phase with ## N. Phase Name headers
+
+  implementation:
+    - "Dynamic resources (timers, intervals, subscriptions) MUST be released at the appropriate lifecycle boundary: page-level in onUnmounted, dialog-level in the dialog hide/close handler"
+    - "Before creating a dynamic resource, guard against duplicates (e.g. if (timer !== null) return). In the release handler, set a non-null sentinel (e.g. false) so in-flight async callbacks also see the stopped state and do not recreate the resource"
