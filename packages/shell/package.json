@@ -8,6 +8,7 @@
   "scripts": {
     "dev": "quasar dev",
     "build": "quasar build",
+    "postbuild": "node scripts/inject-import-map.mjs",
     "lint": "eslint --ext .js,.vue src",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
