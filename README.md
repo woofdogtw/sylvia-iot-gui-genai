@@ -117,8 +117,10 @@ If your plugin is built with Vue or Quasar, declare them as external dependencie
 ```js
 // These bare specifiers resolve via the shell's import map — no bundling needed
 import { ref, computed } from 'vue'
-import { Dark } from 'quasar'
+import { Dark, QTabs, Loading } from 'quasar'
 ```
+
+The shell serves `quasar.js` as the **complete Quasar build** — every component (`QBtn`, `QCard`, `QTabs`, `QTabPanels`, etc.) and every service plugin (`Dark`, `Dialog`, `Loading`, `Notify`, etc.) is available. You do not need to coordinate with the shell about which Quasar APIs your plugin uses.
 
 Configure your bundler to treat them as external:
 
@@ -133,7 +135,52 @@ export default {
 }
 ```
 
+**CSS is loaded automatically.** The shell injects the full Quasar stylesheet into every page — your plugin components will render with correct styles without any additional CSS configuration.
+
+**All Quasar service plugins are pre-installed.** The shell installs all 18 Quasar service plugins at startup: `AddressbarColor`, `AppFullscreen`, `AppVisibility`, `BottomSheet`, `Cookies`, `Dark`, `Dialog`, `IconSet`, `Lang`, `Loading`, `LoadingBar`, `Meta`, `Notify`, `Platform`, `Screen`, `LocalStorage`, `SessionStorage`. Because `quasar` resolves to a single shared instance via the import map, these plugins are immediately available to your plugin code.
+
 > **Note:** Do not bundle your own copy of `vue` or `quasar`. The shell guarantees a single shared instance; a second copy breaks Vue reactivity and Quasar's global state.
+
+### Using Other Frameworks (React, Svelte, etc.)
+
+Plugins built with frameworks other than Vue+Quasar can bundle their own UI library freely — React, Svelte, and similar frameworks do not have singleton requirements.
+
+The plugin must still export the standard interface and provide Vue Router-compatible route components. The simplest approach is to wrap your framework's root component in a thin Vue component that mounts and unmounts it:
+
+```js
+// React example: wrap React app in a Vue component
+import { defineComponent, h } from 'vue'
+import { createRoot } from 'react-dom/client'
+import { createElement } from 'react'  // use React's createElement, NOT Vue's h
+import App from './App.jsx'
+
+const ReactWrapper = defineComponent({
+  setup() {
+    let root = null
+    return {
+      _mount(el)  { root = createRoot(el); root.render(createElement(App)) },
+      _unmount()  { root?.unmount(); root = null },
+    }
+  },
+  mounted()   { this._mount(this.$el) },  // use this.$el to avoid ID conflicts
+  unmounted() { this._unmount() },
+  render()    { return h('div', { style: 'height: 100%' }) },
+})
+
+export default {
+  id: 'my-react-app',
+  name: 'My React App',
+  category: 'applications',
+  routes: [{ path: '/my-react-app', name: 'my-react-app', component: ReactWrapper }],
+  menuItems: [{ label: 'My React App', icon: 'apps', route: '/my-react-app' }],
+}
+```
+
+Key points for non-Vue plugins:
+- Bundle your UI framework inside the plugin — no import map coordination needed.
+- Use `window.sylviaShell.httpClient` for API calls (works the same regardless of framework).
+- Use `window.config` for runtime configuration URLs.
+- Listen to `sylvia-locale-change` on `window` to react to language changes.
 
 ### Reacting to Locale Changes
 
