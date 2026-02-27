@@ -65,3 +65,19 @@ The shell build SHALL produce an `index.html` containing an import map that maps
 - **WHEN** an external plugin imports `vue` via the import map
 - **THEN** `vue` SHALL resolve to the same module instance used by the shell
 - **AND** Vue reactivity (refs, watchers, provide/inject) SHALL work correctly across shell and plugin boundaries
+
+### Requirement: Locale change notification event
+
+The shell SHALL dispatch a `sylvia-locale-change` CustomEvent on `window` whenever the active locale changes, allowing external plugins to react to language switches without depending on the shell's internal store.
+
+#### Scenario: Event dispatched on locale change
+
+- **WHEN** the user changes the application locale
+- **THEN** the shell SHALL dispatch `new CustomEvent('sylvia-locale-change', { detail: { locale: val } })` on `window`
+- **AND** `detail.locale` SHALL be the newly selected locale string (e.g. `'en-US'`, `'zh-TW'`)
+
+#### Scenario: External plugin listens for locale change
+
+- **WHEN** an external plugin registers `window.addEventListener('sylvia-locale-change', handler)`
+- **THEN** `handler` SHALL be called with the event whenever the shell locale changes
+- **AND** the plugin SHALL be able to read `event.detail.locale` to update its own i18n state

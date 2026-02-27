@@ -16,6 +16,8 @@
 - **shell**: External plugin loading via `window.config.plugins` URL array
   - ES module dynamic import with `Promise.allSettled` (failed loads are logged and skipped)
 - **shell**: `window.sylviaShell.httpClient` global — pre-configured Axios instance exposed to external plugins (Bearer token injection + 401 auto-retry with refresh)
+- **shell**: `vue` and `quasar` exposed as shared modules via import map — external plugins can use bare specifiers without bundling their own copies
+- **shell**: `sylvia-locale-change` window event dispatched on locale switch — external plugins can listen to stay in sync with the shell's language setting
 - **mfe-core**: Core management micro-frontend plugin
   - User, client, unit, application, network, device, device route, network route, and DL data buffer management pages
 - **mfe-data**: Data micro-frontend plugin
