@@ -110,6 +110,42 @@ async function fetchDevices() {
 
 > **Note:** Do not bundle your own axios copy in the plugin. Using `window.sylviaShell.httpClient` ensures you share the same interceptor chain (and avoid version mismatches) with the shell.
 
+### Using Vue and Quasar in Your Plugin
+
+If your plugin is built with Vue or Quasar, declare them as external dependencies (do not bundle them). The shell provides both via an [import map](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script/type/importmap) so the browser resolves `vue` and `quasar` bare specifiers automatically:
+
+```js
+// These bare specifiers resolve via the shell's import map — no bundling needed
+import { ref, computed } from 'vue'
+import { Dark } from 'quasar'
+```
+
+Configure your bundler to treat them as external:
+
+```js
+// vite.config.js (or rollup.config.js)
+export default {
+  build: {
+    rollupOptions: {
+      external: ['vue', 'quasar'],
+    },
+  },
+}
+```
+
+> **Note:** Do not bundle your own copy of `vue` or `quasar`. The shell guarantees a single shared instance; a second copy breaks Vue reactivity and Quasar's global state.
+
+### Reacting to Locale Changes
+
+The shell dispatches a `sylvia-locale-change` event on `window` whenever the user switches the application language. Listen to this event to keep your plugin's i18n in sync:
+
+```js
+window.addEventListener('sylvia-locale-change', (event) => {
+  const locale = event.detail.locale  // e.g. 'en-US' or 'zh-TW'
+  // update your plugin's i18n state here
+})
+```
+
 ### Loading an External Plugin
 
 Serve the plugin JS file from any static file server, then add its URL to `window.config.plugins` in `config.js`:

@@ -12,6 +12,7 @@ export const useAppStore = defineStore('app', () => {
   // Persist settings when they change
   watch(locale, (val) => {
     localStorage.setItem('locale', val)
+    window.dispatchEvent(new CustomEvent('sylvia-locale-change', { detail: { locale: val } }))
   })
 
   watch(isDark, (val) => {
