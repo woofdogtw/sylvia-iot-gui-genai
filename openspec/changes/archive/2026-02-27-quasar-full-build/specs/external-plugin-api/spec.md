@@ -1,40 +1,4 @@
-# external-plugin-api Specification
-
-## Purpose
-
-Defines the public SDK that the shell exposes to external plugins via `window.sylviaShell`, enabling third-party micro-frontend plugins to make authenticated API calls without depending on the shell's internal monorepo packages.
-
-## Requirements
-
-### Requirement: Shell global API for external plugins
-
-The shell SHALL expose a `window.sylviaShell` global object after boot, providing external plugins with a pre-configured HTTP client that handles authentication automatically.
-
-#### Scenario: httpClient is available after shell boots
-
-- **WHEN** the shell application has finished booting
-- **THEN** `window.sylviaShell` SHALL be a non-null object
-- **AND** `window.sylviaShell.httpClient` SHALL be an axios instance
-
-#### Scenario: httpClient injects Bearer token on every request
-
-- **WHEN** an external plugin calls `window.sylviaShell.httpClient.get(url)` while the user is authenticated
-- **THEN** the request SHALL include an `Authorization: Bearer <access_token>` header automatically
-- **AND** the plugin SHALL NOT need to set the header manually
-
-#### Scenario: httpClient retries on 401 with refreshed token
-
-- **WHEN** an API call made via `window.sylviaShell.httpClient` returns HTTP 401
-- **AND** the endpoint is not an OAuth2 or auth endpoint
-- **THEN** the client SHALL attempt to refresh the access token
-- **AND** if refresh succeeds, the original request SHALL be retried once with the new token
-- **AND** if refresh fails, the user SHALL be redirected to the login page
-
-#### Scenario: External plugin documentation in README
-
-- **WHEN** a developer wants to create an external plugin
-- **THEN** the root README SHALL document `window.sylviaShell.httpClient` usage with a code example
-- **AND** the documentation SHALL explain that plugins should NOT bundle their own axios instance
+## MODIFIED Requirements
 
 ### Requirement: Shared framework modules via import map
 
@@ -72,6 +36,8 @@ The shell build SHALL produce an `index.html` containing an import map that maps
 - **THEN** the import SHALL resolve to a fully functional component
 - **AND** the plugin SHALL NOT need to coordinate with the shell about which components are included
 
+## ADDED Requirements
+
 ### Requirement: Quasar CSS auto-loaded for external plugins
 
 The shell SHALL inject the full Quasar stylesheet into `index.html` so that external plugins using any Quasar component receive correct styling without bundling their own CSS.
@@ -103,19 +69,3 @@ The shell SHALL install all 18 Quasar service plugins into the Vue app at startu
 - **WHEN** an external plugin imports a Quasar service plugin (e.g. `import { Loading } from 'quasar'`) and calls its methods (e.g. `Loading.show()`)
 - **THEN** the service plugin SHALL function correctly
 - **AND** the plugin SHALL NOT need to install the service plugin itself
-
-### Requirement: Locale change notification event
-
-The shell SHALL dispatch a `sylvia-locale-change` CustomEvent on `window` whenever the active locale changes, allowing external plugins to react to language switches without depending on the shell's internal store.
-
-#### Scenario: Event dispatched on locale change
-
-- **WHEN** the user changes the application locale
-- **THEN** the shell SHALL dispatch `new CustomEvent('sylvia-locale-change', { detail: { locale: val } })` on `window`
-- **AND** `detail.locale` SHALL be the newly selected locale string (e.g. `'en-US'`, `'zh-TW'`)
-
-#### Scenario: External plugin listens for locale change
-
-- **WHEN** an external plugin registers `window.addEventListener('sylvia-locale-change', handler)`
-- **THEN** `handler` SHALL be called with the event whenever the shell locale changes
-- **AND** the plugin SHALL be able to read `event.detail.locale` to update its own i18n state

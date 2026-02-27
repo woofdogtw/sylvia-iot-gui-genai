@@ -36,13 +36,6 @@ export default configure(function (/* ctx */) {
         // resolved at runtime via the import map to /assets/vue.js (full browser build).
         // This ensures all vue exports are available to external plugins.
         viteConf.build.rollupOptions.external = ['vue']
-        const output = viteConf.build.rollupOptions.output ?? {}
-        output.manualChunks = Object.assign(output.manualChunks ?? {}, {
-          quasar: ['quasar'],
-        })
-        output.chunkFileNames = (chunk) =>
-          chunk.name === 'quasar' ? 'assets/[name].js' : 'assets/[name]-[hash].js'
-        viteConf.build.rollupOptions.output = output
       },
     },
 
@@ -52,10 +45,23 @@ export default configure(function (/* ctx */) {
 
     framework: {
       plugins: [
+        'AddressbarColor',
+        'AppFullscreen',
+        'AppVisibility',
+        'BottomSheet',
+        'Cookies',
         'Dark',
         'Dialog',
-        'LocalStorage',
+        'IconSet',
+        'Lang',
+        'Loading',
+        'LoadingBar',
+        'Meta',
         'Notify',
+        'Platform',
+        'Screen',
+        'LocalStorage',
+        'SessionStorage',
       ],
     },
 
