@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 0.1.1 - 2026-03-05
+
+### Changed
+
+- **Docker**: nginx base image updated from `1.27-alpine` to `1.29.5-alpine-slim`
+- **deps**: `axios` ^1.13.5 → ^1.13.6, `eslint` ^10.0.0 → ^10.0.2, `vue` ^3.5.28 → ^3.5.29
+
 ## 0.1.0 - 2026-02-27
 
 ### Added

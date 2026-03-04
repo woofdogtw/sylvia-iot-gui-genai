@@ -1,5 +1,9 @@
+import { createRequire } from 'node:module'
 import { test, expect } from '@playwright/test'
 import { login } from './helpers.js'
+
+const require = createRequire(import.meta.url)
+const { version } = require('../package.json')
 
 test.describe('About Page (unauthenticated)', () => {
   test('should redirect unauthenticated user away from About page', async ({ page }) => {
@@ -40,7 +44,7 @@ test.describe('About Page', () => {
     // Frontend section shows app name and version injected at build time via process.env
     const frontendCard = page.locator('.q-card').first()
     await expect(frontendCard).toContainText('Sylvia-IoT')
-    await expect(frontendCard).toContainText('0.1.0')
+    await expect(frontendCard).toContainText(version)
   })
 
   test('should display core service name and version', async ({ page }) => {
