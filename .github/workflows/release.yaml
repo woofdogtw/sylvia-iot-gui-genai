@@ -6,7 +6,7 @@ on:
       - 'v*'
 
 env:
-  GHR_VER: v0.17.0
+  GHR_VER: v0.18.0
   BIN_DIR: dist
 
 jobs:
@@ -17,10 +17,10 @@ jobs:
       contents: write
       packages: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
         with:
-          node-version: '22'
+          node-version: '24'
           cache: 'npm'
 
       - run: npm ci
@@ -39,8 +39,8 @@ jobs:
           echo -n "$VER" > $BIN_DIR/tmp/sylvia-iot-gui/VERSION
 
           # Create tar.xz archive
-          tar cf $BIN_DIR/sylvia-iot-gui-$TAG.tar -C $BIN_DIR/tmp sylvia-iot-gui
-          xz -z -9 -e $BIN_DIR/sylvia-iot-gui-$TAG.tar
+          tar cf $BIN_DIR/sylvia-iot-gui.tar -C $BIN_DIR/tmp sylvia-iot-gui
+          xz -z -9 -e $BIN_DIR/sylvia-iot-gui.tar
           rm -rf $BIN_DIR/tmp
 
           # Standalone VERSION file
@@ -71,19 +71,19 @@ jobs:
         run: npm run build
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+        uses: docker/setup-qemu-action@v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
 
       - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Log in to GitHub Container Registry
-        uses: docker/login-action@v3
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -91,7 +91,7 @@ jobs:
 
       - name: Extract Docker metadata
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
           images: |
             woofdogtw/sylvia-iot-gui
@@ -102,7 +102,7 @@ jobs:
             type=semver,pattern={{major}}
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: .
           push: true
