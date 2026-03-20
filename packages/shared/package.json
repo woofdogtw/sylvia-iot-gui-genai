@@ -1,6 +1,6 @@
 {
   "name": "@sylvia-iot/shared",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Shared utilities, API clients, and components for Sylvia-IoT GUI",
   "private": true,
   "type": "module",

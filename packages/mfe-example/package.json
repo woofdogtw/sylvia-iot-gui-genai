@@ -1,6 +1,6 @@
 {
   "name": "@sylvia-iot/mfe-example",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Example micro-frontend plugin for Sylvia-IoT shell",
   "private": true,
   "type": "module",
