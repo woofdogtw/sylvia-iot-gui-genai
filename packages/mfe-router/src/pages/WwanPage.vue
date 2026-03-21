@@ -49,7 +49,7 @@
             </q-item>
           </q-list>
         </q-card-section>
-        <q-card-actions v-if="status.connected" align="right">
+        <q-card-actions v-if="status.ssid" align="right">
           <q-btn flat color="negative" :label="t('router.wwan.disconnect')" @click="disconnectWwan" />
         </q-card-actions>
       </q-card>
@@ -61,13 +61,14 @@
             v-if="apList.length"
             :rows="apList"
             :columns="apColumns"
-            row-key="ssid"
+            row-key="index"
             dense
             flat
           >
             <template #body-cell-connect="props">
               <q-td :props="props">
                 <q-btn
+                  v-if="props.row.ssid !== status.ssid"
                   flat
                   dense
                   color="primary"
@@ -98,6 +99,7 @@
               dense
               outlined
               autofocus
+              @keyup.enter="isPwFormValid && onPasswordConfirm()"
             />
           </q-form>
         </q-card-section>
@@ -122,7 +124,7 @@ const { t } = useI18n()
 const loading = ref(true)
 const supported = ref(true)
 const apList = shallowRef([])
-const status = ref({ ssid: '', hostIp: '', gateway: '', dns: '', connected: false })
+const status = ref({ ssid: '', hostIp: '', gateway: '', dns: '' })
 
 const connectTarget = ref(null)
 const showPasswordDialog = ref(false)
@@ -165,7 +167,6 @@ async function pollStatus() {
       hostIp: data.conn4?.address || '',
       gateway: data.conn4?.gateway || '',
       dns: Array.isArray(data.conn4?.dns) ? data.conn4.dns.join(', ') : (data.conn4?.dns || ''),
-      connected: !!data.conn4?.address,
     }
     supported.value = true
   } catch (err) {
@@ -180,7 +181,12 @@ async function pollStatus() {
 async function pollApList() {
   try {
     const res = await wwanApi.scan()
-    apList.value = res.data?.data || []
+    const items = res.data?.data || []
+    const connectedSsid = status.value.ssid
+    if (connectedSsid) {
+      items.sort((a, b) => (a.ssid === connectedSsid ? -1 : b.ssid === connectedSsid ? 1 : 0))
+    }
+    apList.value = items
   } catch {
     // scan errors are silent — status polling handles critical errors
   }

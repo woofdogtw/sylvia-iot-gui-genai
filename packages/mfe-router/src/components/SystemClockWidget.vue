@@ -45,7 +45,10 @@ async function fetchAndSchedule() {
     if (timer === false) return  // unmounted during fetch
     timer = setTimeout(fetchAndSchedule, delay)
   } catch {
-    visible.value = false
+    formatFromMs(Date.now())
+    visible.value = true
+    if (timer === false) return
+    timer = setTimeout(fetchAndSchedule, 60000)
   }
 }
 

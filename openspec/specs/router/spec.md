@@ -150,15 +150,19 @@ The page SHALL display the AP list with columns: SSID, security, channel, signal
 - **THEN** a "wireless WAN not supported" message is displayed and polling stops
 
 ### Requirement: System Clock Header Widget
-The router plugin SHALL register a header widget that displays the router's system time in two lines: `YYYY/MM/DD` on top and `HH:MM` below. The time SHALL be fetched from `GET /router/api/v1/sys/time`. The polling SHALL use smart sleep: after receiving a response, compute the ms offset until the next minute boundary and sleep accordingly, so the display updates precisely when the minute changes. If the router API is unreachable, the widget SHALL hide gracefully.
+The router plugin SHALL register a header widget that displays the router's system time in two lines: `YYYY/MM/DD` on top and `HH:MM` below. The time SHALL be fetched from `GET /router/api/v1/sys/time`. The polling SHALL use smart sleep: after receiving a response, compute the ms offset until the next minute boundary and sleep accordingly, so the display updates precisely when the minute changes. If the router API is unreachable, the widget SHALL fall back to local device time and continue polling; once the backend responds again, the widget SHALL resume using backend time.
 
 #### Scenario: Clock displays router time
 - **WHEN** the router plugin is loaded and the API is reachable
 - **THEN** a two-line clock (date + time) appears in the header toolbar, updating at each minute boundary
 
-#### Scenario: Router unreachable
+#### Scenario: Router unreachable — widget falls back to local time
 - **WHEN** the sys/time API call fails
-- **THEN** the clock widget is hidden (no error shown)
+- **THEN** the clock widget remains visible using local device time (no error shown) and the next poll is still scheduled
+
+#### Scenario: Clock resumes backend time after recovery
+- **WHEN** a subsequent poll to GET /router/api/v1/sys/time succeeds after previous failures
+- **THEN** the widget switches back to displaying backend time
 
 #### Scenario: Clock widget visible after login
 - **WHEN** the user logs in and the `sylvia-router` backend is running
@@ -360,7 +364,7 @@ The WLAN page SHALL validate SSID and password fields before calling the API. Th
 - **AND** when all fields are corrected to valid values the Save button re-enables automatically
 
 ### Requirement: WWAN Page Input Validation
-The WWAN page connect password dialog SHALL validate that the SSID is non-empty and the password is non-empty before submitting a connection request. Validation SHALL run when the user confirms the dialog.
+The WWAN page connect password dialog SHALL validate that the SSID is non-empty and the password is non-empty before submitting a connection request. Validation SHALL run when the user confirms the dialog. When validation passes, pressing Enter in the password field SHALL submit the dialog.
 
 #### Scenario: WWAN connect dialog rejects empty password for secured AP
 - **WHEN** the user clicks CONNECT on an AP with security type `wpa2` and leaves the password field empty
@@ -369,6 +373,10 @@ The WWAN page connect password dialog SHALL validate that the SSID is non-empty 
 #### Scenario: WWAN connects directly for open AP
 - **WHEN** the user clicks CONNECT on an AP with security type `none`
 - **THEN** no password dialog is shown and the PUT API call is made immediately
+
+#### Scenario: Enter key submits password dialog when valid
+- **WHEN** the password field contains a non-empty value and the user presses Enter
+- **THEN** the dialog submits and the PUT API call is made
 
 ### Requirement: i18n Support
 The router plugin SHALL provide i18n messages for en-US and zh-TW covering all menu labels, page titles, field labels, status messages, and validation messages.
