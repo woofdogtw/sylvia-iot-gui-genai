@@ -63,14 +63,14 @@ jobs:
       - name: Install system dependencies
         run: sudo apt-get install -y sqlite3
 
-      - name: Remove bundled binary (CI downloads latest from GitHub Releases)
-        run: rm -f skills/sylvia-iot-services/scripts/sylvia-iot-core
-
-      - name: Remove local database (CI creates fresh)
-        run: rm -f skills/sylvia-iot-services/scripts/test.db
+      - name: Download deployment scripts
+        run: git clone https://github.com/woofdogtw/sylvia-iot-deployment /tmp/sylvia-iot-deployment
 
       - name: Start backend services (RabbitMQ + EMQX + sylvia-iot-core)
-        run: bash skills/sylvia-iot-services/scripts/start.sh
+        run: bash /tmp/sylvia-iot-deployment/scripts/start.sh --bin core
+
+      - name: Add E2E redirect URI to OAuth2 public client
+        run: bash .github/scripts/patch-oauth2-client.sh
 
       - run: npm ci
 
@@ -111,14 +111,14 @@ jobs:
       - name: Install system dependencies
         run: sudo apt-get install -y sqlite3
 
-      - name: Remove bundled binary (CI downloads latest from GitHub Releases)
-        run: rm -f skills/sylvia-iot-services/scripts/sylvia-iot-core
-
-      - name: Remove local database (CI creates fresh)
-        run: rm -f skills/sylvia-iot-services/scripts/test.db
+      - name: Download deployment scripts
+        run: git clone https://github.com/woofdogtw/sylvia-iot-deployment /tmp/sylvia-iot-deployment
 
       - name: Start backend services (RabbitMQ + EMQX + sylvia-iot-core)
-        run: bash skills/sylvia-iot-services/scripts/start.sh
+        run: bash /tmp/sylvia-iot-deployment/scripts/start.sh --bin core
+
+      - name: Add E2E redirect URI to OAuth2 public client
+        run: bash .github/scripts/patch-oauth2-client.sh
 
       - run: npm ci
 
@@ -159,14 +159,14 @@ jobs:
       - name: Install system dependencies
         run: sudo apt-get install -y sqlite3
 
-      - name: Remove bundled binary (CI downloads latest from GitHub Releases)
-        run: rm -f skills/sylvia-router/scripts/sylvia-router
-
-      - name: Remove local database (CI creates fresh)
-        run: rm -f skills/sylvia-router/scripts/test.db
+      - name: Download deployment scripts
+        run: git clone https://github.com/woofdogtw/sylvia-iot-deployment /tmp/sylvia-iot-deployment
 
       - name: Start backend services (RabbitMQ + EMQX + sylvia-router)
-        run: bash skills/sylvia-router/scripts/start.sh
+        run: bash /tmp/sylvia-iot-deployment/scripts/start.sh --bin router
+
+      - name: Add E2E redirect URI to OAuth2 public client
+        run: bash .github/scripts/patch-oauth2-client.sh
 
       - run: npm ci
 

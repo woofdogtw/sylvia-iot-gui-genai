@@ -88,11 +88,13 @@ npm run test
 
 ### E2E Tests (Playwright)
 
-E2E tests are in `packages/shell/e2e/` and require a running Sylvia-IoT backend. To set up the backend:
+E2E tests are in `packages/shell/e2e/` and require a running Sylvia-IoT backend. To set up the backend, install the AI skills and use the skill in Claude Code:
 
 ```bash
-skills/sylvia-iot-services/scripts/start.sh
+npx skills add woofdogtw/ai-skills
 ```
+
+Then use the `/sylvia-iot-services start` skill in Claude Code.
 
 Then run E2E tests:
 
