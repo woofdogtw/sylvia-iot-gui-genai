@@ -30,8 +30,9 @@ context: |
   Testing:
   - Unit: Vitest (packages/shell and packages/mfe-*)
   - E2E: Playwright in packages/shell/e2e/
-  - Router E2E requires sylvia-router: skills/sylvia-router/scripts/start.sh
-  - Other E2E requires sylvia-iot-core: skills/sylvia-iot-services/scripts/start.sh
+  - E2E tests require the sylvia-iot-services skill (install via: npx skills add woofdogtw/ai-skills)
+  - Router E2E requires sylvia-router: use /sylvia-iot-services start --bin router skill
+  - Other E2E requires sylvia-iot-core: use /sylvia-iot-services start skill
 
 rules:
   tasks:
